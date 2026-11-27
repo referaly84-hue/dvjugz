@@ -281,7 +281,7 @@ function buildTeamContextSnapshot(ctx: PlayerMoraleContext, teamId: string): Tea
         f.status === "done" &&
         (f.season || season) === season &&
         (f.home === teamId || f.away === teamId) &&
-        f.comp !== "friendly"
+        !["friendly", "friendly_match", "national", "national_u21", "intra"].includes(String(f.comp || ""))
     )
     .sort(
       (a: any, b: any) =>
@@ -715,7 +715,7 @@ export function buildClubMoraleMap(ctx: PlayerMoraleContext, teamId: string): Re
 }
 
 export function updateMoraleAfterMatch(ctx: PlayerMoraleContext, f: any, m: any) {
-  if (!f || f.comp === "friendly") return;
+  if (!f || ["friendly", "friendly_match", "national", "national_u21", "intra"].includes(String(f.comp || ""))) return;
   const db = ctx.getDb();
   ensureMoraleStores(db);
   for (const side of ["home", "away"] as const) {

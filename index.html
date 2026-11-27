@@ -3244,13 +3244,15 @@ const mapNationalMatchToFixture = (m, teamType = 'main', breakTitle = '') => {
   const isU21 = teamType === 'u21';
   const rusName = isU21 ? 'Россия U21' : 'Россия';
   const rusLogo = '/assets/aistudio/russia_russia-national-team.football-logos.cc_2a5e3ddc.svg';
-  const oppLogo = teamLogo(m.opponent) || '';
+  const oppLogo = m.opponentLogo || teamLogo(m.opponent) || '';
   const gDate = m.gameDate || m.date || '';
   const gTime = m.gameTime || m.time || '19:00';
   const rDate = m.realDate || m.date || gDate;
   const rTime = m.realTime || m.time || gTime;
+  const fid = m.fixtureId || ((isU21 ? 'ntu21_' : 'nt_') + (m.id || `${gDate}_${m.opponent || ''}`));
   return {
-    id: (isU21 ? 'ntu21_' : 'nt_') + (m.id || `${gDate}_${m.opponent || ''}`),
+    id: fid,
+    fixtureId: m.fixtureId || null,
     comp: isU21 ? 'national_u21' : 'national',
     label: breakTitle || (isU21 ? 'Сборная России U21 · Товарищеский матч' : 'Сборная России · Товарищеский матч'),
     date: gDate,
@@ -3259,8 +3261,8 @@ const mapNationalMatchToFixture = (m, teamType = 'main', breakTitle = '') => {
     gameTime: gTime,
     realDate: rDate,
     realTime: rTime,
-    home: m.home ? (isU21 ? 'rus_u21' : 'rus') : (m.opponent || 'opp'),
-    away: m.home ? (m.opponent || 'opp') : (isU21 ? 'rus_u21' : 'rus'),
+    home: m.home ? (isU21 ? 'tm_nt_u21' : 'tm_nt_main') : (m.opponent || 'opp'),
+    away: m.home ? (m.opponent || 'opp') : (isU21 ? 'tm_nt_u21' : 'tm_nt_main'),
     homeName: m.home ? rusName : (m.opponent || 'Соперник'),
     awayName: m.home ? (m.opponent || 'Соперник') : rusName,
     homeLogo: m.home ? rusLogo : oppLogo,
@@ -3268,7 +3270,8 @@ const mapNationalMatchToFixture = (m, teamType = 'main', breakTitle = '') => {
     status: m.status || 'scheduled',
     hg: m.hg ?? null,
     ag: m.ag ?? null,
-    isNational: true,
+    pen: m.pen || null,
+    isNational: !m.fixtureId,
     isNationalU21: isU21
   };
 };
@@ -3909,9 +3912,9 @@ const fxRow = (f, showComp = false) => {
     }
   }
 
-  const rowHref = (f.isNational || f.comp === 'national' || f.comp === 'national_u21')
-    ? ((f.isNationalU21 || f.comp === 'national_u21') ? '#/national/u21' : '#/national')
-    : `#/match/${f.id}`;
+  const rowHref = (f.fixtureId || !f.isNational)
+    ? `#/match/${f.fixtureId || f.id}`
+    : ((f.isNationalU21 || f.comp === 'national_u21') ? '#/national/u21' : '#/national');
 
   return `<a href="${rowHref}" class="fx fxl" title="${tooltipText}${showComp === true && f.label ? ' · ' + e(f.label) : ''}">
   <div class="d">${ti.dateStr}${ti.timeStr ? ' · ' + ti.timeStr : ''} <span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle">${badgeHtml}${compBadgeHtml}</span></div>
@@ -3933,7 +3936,7 @@ const fxRow = (f, showComp = false) => {
     ${st}
     ${f.tech ? `<span class="tag" title="${e(f.note || 'Техническое поражение')}" style="background:#fef2f2;color:#991b1b;border-color:#fca5a5;font-size:10.5px;font-weight:700">ТП</span>` : ''}
     ${f.pen ? `<span class="tag">пен. ${f.pen.hg}:${f.pen.ag}</span>` : ''}
-    ${(S.me?.role === 'admin' && !f.isNational) ? `<button type="button" class="btn alt sm admin-edit-time-btn" data-admin-edit-time="${f.id}" title="Изменить дату и время этого матча (Администратор)" style="padding:2px 7px;font-size:11px;z-index:2;position:relative" onclick="event.preventDefault();event.stopPropagation();window.openMatchScheduleModal('${f.id}')">✏️ Время</button>` : ''}
+    ${(S.me?.role === 'admin' && (f.fixtureId || !f.isNational)) ? `<button type="button" class="btn alt sm admin-edit-time-btn" data-admin-edit-time="${f.fixtureId || f.id}" title="Изменить дату и время этого матча (Администратор)" style="padding:2px 7px;font-size:11px;z-index:2;position:relative" onclick="event.preventDefault();event.stopPropagation();window.openMatchScheduleModal('${f.fixtureId || f.id}')">✏️ Время</button>` : ''}
   </div>
 </a>`;
 };
@@ -4278,12 +4281,13 @@ async function pgHome(app) {
   if (myTeamId && !myComp && rplTeamIds.has(myTeamId)) {
     myComp = 'rpl';
   }
+  const seenHomeIds = new Set(allFx.map(f => f.id));
   const ntFixtures = [
     ...((ntMain?.current?.matches || []).map(m => mapNationalMatchToFixture(m, 'main', ntMain?.current?.title || ''))),
     ...((ntU21?.current?.matches || []).map(m => mapNationalMatchToFixture(m, 'u21', ntU21?.current?.title || '')))
-  ];
+  ].filter(f => !seenHomeIds.has(f.id));
   const fx = [
-    ...allFx.filter(f => f.comp === 'rpl' || f.comp === 'fnl' || f.comp === 'cup' || f.comp === 'friendly_match' || rplTeamIds.has(f.home) || rplTeamIds.has(f.away)),
+    ...allFx.filter(f => f.comp === 'rpl' || f.comp === 'fnl' || f.comp === 'cup' || f.comp === 'friendly_match' || f.comp === 'national' || f.comp === 'national_u21' || rplTeamIds.has(f.home) || rplTeamIds.has(f.away)),
     ...ntFixtures
   ];
   const isCupRplPath = f => {
@@ -4871,18 +4875,22 @@ async function pgFixtures(app, comp = 'rpl', round) {
 
     // Группируем матчи по датам
     const matchesByDate = {};
+    const existingIds = new Set();
     (allRaw || []).forEach(f => {
+      if (f.id) existingIds.add(f.id);
       if (!f.date) return;
       if (activeFilter !== 'all' && f.comp !== activeFilter) return;
       matchesByDate[f.date] = matchesByDate[f.date] || [];
       matchesByDate[f.date].push(f);
     });
 
-    // Добавляем товарищеские матчи сборной
+    // Добавляем товарищеские матчи сборной, если ещё не пришли из /fixtures
     if (activeFilter === 'all' || activeFilter === 'national') {
       (ntData?.current?.matches || []).forEach(m => {
         if (!m.date && !m.gameDate) return;
         const mapped = mapNationalMatchToFixture(m, 'main', ntData?.current?.title || 'Товарищеский матч');
+        if (existingIds.has(mapped.id)) return;
+        existingIds.add(mapped.id);
         matchesByDate[mapped.date] = matchesByDate[mapped.date] || [];
         matchesByDate[mapped.date].push(mapped);
       });
@@ -4891,6 +4899,8 @@ async function pgFixtures(app, comp = 'rpl', round) {
       (ntU21Data?.current?.matches || []).forEach(m => {
         if (!m.date && !m.gameDate) return;
         const mapped = mapNationalMatchToFixture(m, 'u21', ntU21Data?.current?.title || 'Товарищеский матч U21');
+        if (existingIds.has(mapped.id)) return;
+        existingIds.add(mapped.id);
         matchesByDate[mapped.date] = matchesByDate[mapped.date] || [];
         matchesByDate[mapped.date].push(mapped);
       });
@@ -4980,14 +4990,14 @@ async function pgFixtures(app, comp = 'rpl', round) {
         ${curBreak ? `<div class="panel" style="background:#fee2e2;border:1px solid #fca5a5;padding:8px 12px;margin-bottom:10px"><b>🇷🇺 ${e(curBreak.name)}</b>: пауза в чемпионатах на матчи национальных сборных.</div>` : ''}
         ${isWinter ? `<div class="panel" style="background:#e0f2fe;border:1px solid #bae6fd;padding:8px 12px;margin-bottom:10px"><b>❄️ Зимний перерыв в РПЛ</b>: клубы проводят сборы и товарищеские матчи.</div>` : ''}
         ${dayList.length ? dayList.map(f => {
-          if (f.isNational) {
+          if (f.isNational && !f.fixtureId) {
             const isU21Match = !!f.isNationalU21;
             return `<div class="row sp" style="padding:10px 12px;background:var(--soft);border-radius:8px;margin-bottom:8px;gap:8px;flex-wrap:wrap">
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;flex:1"><img src="/assets/aistudio/russia_russia-national-team.football-logos.cc_2a5e3ddc.svg" alt="" style="width:18px;height:18px;object-fit:contain;flex-shrink:0"/><span class="tag live" style="background:${isU21Match ? '#4f46e5' : '#b91c1c'}">${isU21Match ? 'Сборная России U21' : 'Сборная России'}</span> <b>${e(f.homeName)} — ${e(f.awayName)}</b> · ${e(f.time)}</div>
               <a class="btn alt sm" href="${isU21Match ? '#/national/u21' : '#/national'}">${isU21Match ? 'В раздел U21' : 'В раздел Сборная'}</a>
             </div>`;
           }
-          return fxRow(f);
+          return fxRow(f, f.comp === 'national' || f.comp === 'national_u21');
         }).join('') : '<div class="empty">Матчей и событий на этот день нет.</div>'}
       </div>`;
     }
@@ -5120,10 +5130,19 @@ async function pgFixtures(app, comp = 'rpl', round) {
   let rawAll = [];
   if (isNationalComp) {
     const ntType = comp === 'national_u21' ? 'u21' : 'main';
-    const ntData = await api(ntType === 'u21' ? '/national?team=u21' : '/national').catch(() => null);
-    const curMatches = (ntData?.current?.matches || []).map(m => mapNationalMatchToFixture(m, ntType, ntData?.current?.title || 'Ближайшая пауза'));
-    const archMatches = (ntData?.archive || []).flatMap(a => (a.matches || []).map(m => mapNationalMatchToFixture(m, ntType, a.title || 'Архивный сбор')));
-    rawAll = [...curMatches, ...archMatches];
+    const [fxResp, ntData] = await Promise.all([
+      api('/fixtures?comp=' + comp).catch(() => []),
+      api(ntType === 'u21' ? '/national?team=u21' : '/national').catch(() => null)
+    ]);
+    const synced = Array.isArray(fxResp) ? fxResp : [];
+    const existingIds = new Set(synced.map(x => x.id));
+    const curMatches = (ntData?.current?.matches || [])
+      .map(m => mapNationalMatchToFixture(m, ntType, ntData?.current?.title || 'Ближайшая пауза'))
+      .filter(m => !existingIds.has(m.id));
+    const archMatches = (ntData?.archive || []).flatMap(a => (a.matches || [])
+      .map(m => mapNationalMatchToFixture(m, ntType, a.title || 'Архивный сбор'))
+      .filter(m => !existingIds.has(m.id)));
+    rawAll = [...synced, ...curMatches, ...archMatches];
   } else {
     const rawAllResp = await api('/fixtures?comp=' + comp).catch(() => []);
     rawAll = Array.isArray(rawAllResp) ? rawAllResp : [];
@@ -9982,7 +10001,7 @@ async function pgClub(app) {
     const fr = c.friendly || { incoming: [], outgoing: [], history: [], breaks: [] };
     const stT = { pending: ['⏳ Ждёт решения', '#fef9c3;color:#854d0e'], approved: ['✅ Матч назначен', '#dcfce7;color:#166534'], rejected: ['❌ Отклонена', '#fee2e2;color:#991b1b'], cancelled: ['↩ Отозвана', '#e2e8f0;color:#334155'], expired: ['⌛ Истекла', '#e2e8f0;color:#334155'] };
     const appr = (v) => v === 'approved' ? '✅' : v === 'rejected' ? '❌' : v === 'not_required' ? '—' : '⏳';
-    const allTeams = (S.st?.teams || []).filter(t => t.id !== CLUB_TID && !t.national && !String(t.id).startsWith('tm_nt_'));
+    const allTeams = (S.st?.teams || []).filter(t => t.id !== CLUB_TID && !t.national && !t.nationalForeign && !String(t.id).startsWith('tm_nt'));
     const compName = (id) => (S.st?.comps || []).find(x => x.id === id)?.name;
     const groups = {};
     allTeams.forEach(t => { const g = compName(t.comp) && t.comp !== 'friendly_match' ? compName(t.comp) : 'Зарубежные и прочие клубы'; (groups[g] ||= []).push(t); });
@@ -15425,8 +15444,9 @@ async function pgAdmin(app) {
     await ensureChannels().then(m => m.renderAdminChannelsTab(ab, ov, re));
   }
   else if (AT === 'players') {
-    const euTeams = T.filter(t => t.comp === 'europe');
-    const ruTeams = T.filter(t => t.comp !== 'europe');
+    const realTeams = T.filter(t => !t.national && !t.nationalForeign && !String(t.id).startsWith('tm_nt'));
+    const euTeams = realTeams.filter(t => t.comp === 'europe');
+    const ruTeams = realTeams.filter(t => t.comp !== 'europe');
     const buildFilterClubOpts = (sel) => `
       <option value="" ${sel === '' ? 'selected' : ''}>Все команды и игроки</option>
       <option value="__europe__" ${sel === '__europe__' ? 'selected' : ''}>🌍 Вся Европа (клубы + пул)</option>
@@ -15606,7 +15626,7 @@ async function pgAdmin(app) {
 
     const pform = p => {
       const f = (k, l, ta) => `<label>${l}</label>${ta ? `<textarea id="f_${k}" style="min-height:60px">${e(p?.[k] || '')}</textarea>` : `<input id="f_${k}" value="${e(p?.[k] || '')}">`}`;
-      const banCompOpts = (S.st?.comps || []).filter(c => c.id !== 'friendly_match' && c.type !== 'abroad');
+      const banCompOpts = (S.st?.comps || []).filter(c => c.id !== 'friendly_match' && c.type !== 'abroad' && c.type !== 'national');
       const pTeamObj = T.find(t => t.id === p?.teamId);
       const banByCompMap = (p?.banByComp && typeof p.banByComp === 'object') ? p.banByComp : {};
       const activeBanComps = Object.keys(banByCompMap).filter(k => (banByCompMap[k]?.left || 0) > 0);
@@ -19845,7 +19865,7 @@ async function pgAdmin(app) {
     <label style="margin-top:8px"><input type="checkbox" id="auto" ${s.auto ? 'checked' : ''} style="width:auto"> Автозапуск матчей по расписанию</label>
     <label style="margin-top:6px"><input type="checkbox" id="tdef" ${s.techDefeat ? 'checked' : ''} style="width:auto"> Авто-ТН (техническое поражение 0:3 при неподанном составе, неполном штабе или неоформленном выезде + штраф КДК за неявку)</label>
     ${(() => {
-      const tdComps = (ov.comps && ov.comps.length ? ov.comps : (S.st?.comps || []).filter(c => c && c.id && c.id !== 'friendly_match' && c.type !== 'friendly' && c.type !== 'abroad').flatMap(c => c.id === 'cup' ? [
+      const tdComps = (ov.comps && ov.comps.length ? ov.comps : (S.st?.comps || []).filter(c => c && c.id && c.id !== 'friendly_match' && c.type !== 'friendly' && c.type !== 'abroad' && c.type !== 'national').flatMap(c => c.id === 'cup' ? [
         { id: 'cup_rpl', name: 'Кубок России · Путь РПЛ', level: 'Группы, плей-офф Пути РПЛ и Суперфинал' },
         { id: 'cup_regions', name: 'Кубок России · Путь регионов', level: 'Отбор (Р1–Р6) и плей-офф Пути регионов' }
       ] : [c]));
@@ -20155,12 +20175,23 @@ async function pgNational(app, subTeam) {
     const rusLogo = '/assets/aistudio/russia_russia-national-team.football-logos.cc_2a5e3ddc.svg';
     return `<div style="display:grid;gap:8px">
       ${matches.map(m => {
-        const oppLogo = teamLogo(m.opponent);
+        const oppLogo = m.opponentLogo || teamLogo(m.opponent);
         const gDate = m.gameDate || m.date;
         const gTime = m.gameTime || m.time || '19:00';
         const rDate = m.realDate || m.date;
         const rTime = m.realTime || m.time || '19:00';
-        return `<div class="row sp" style="padding:10px 14px;background:var(--soft);border-radius:8px">
+        const st = m.status || 'scheduled';
+        let stTag = `<span class="tag">${isU21 ? 'Товарищеский матч U21' : 'Товарищеский матч'}</span>`;
+        if (st === 'done' && m.hg != null && m.ag != null) {
+          stTag = `<span class="tag" style="background:#166534;color:#fff;font-weight:700">${m.hg}:${m.ag}${m.pen ? ` (пен. ${m.pen.hg}:${m.pen.ag})` : ''}</span>`;
+        } else if (st === 'live') {
+          stTag = `<span class="tag live">LIVE${m.hg != null && m.ag != null ? ` ${m.hg}:${m.ag}` : ''}</span>`;
+        } else if (st === 'generating') {
+          stTag = `<span class="tag" style="background:#fef3c7;color:#92400e">Идёт генерация…</span>`;
+        } else if (st === 'queued') {
+          stTag = `<span class="tag" style="background:#e0f2fe;color:#0369a1">В очереди</span>`;
+        }
+        return `<div class="row sp" style="padding:10px 14px;background:var(--soft);border-radius:8px;gap:8px;flex-wrap:wrap">
         <div class="row" style="gap:12px;align-items:center;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:8px">
             <img src="${m.home ? rusLogo : (oppLogo || rusLogo)}" alt="" class="t-logo" style="width:24px;height:24px;object-fit:contain"/>
@@ -20173,8 +20204,9 @@ async function pgNational(app, subTeam) {
             <span>⏰ Настоящее: <b>${fmtD(rDate)} ${e(rTime)} МСК</b></span>
           </div>
         </div>
-        <div class="row" style="gap:8px">
-          <span class="tag">${isU21 ? 'Товарищеский матч U21' : 'Товарищеский матч'}</span>
+        <div class="row" style="gap:8px;align-items:center">
+          ${stTag}
+          ${m.fixtureId ? `<a class="btn alt sm" href="#/match/${e(m.fixtureId)}">${st === 'live' ? 'Смотреть' : (st === 'done' ? 'Обзор' : 'Матч')}</a>` : ''}
           ${canEdit ? `<button class="btn alt sm" data-nt-del-match="${m.id}" title="Удалить матч" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">✕</button>` : ''}
         </div>
       </div>`;

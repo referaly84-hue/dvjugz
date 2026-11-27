@@ -493,7 +493,7 @@ var SUB_COND_LABELS: Record<string, string> = {
   tired: "при усталости игрока"
 };
 function getFixtureLegionLimit(f: any, tid?: string) {
-  if (!f || isIntraSquad(f) || f.comp === FRIENDLY_COMP || f.comp === "friendly" || f.comp === "friendly_match" || f.comp === "national") return null;
+  if (!f || isIntraSquad(f) || f.comp === FRIENDLY_COMP || f.comp === "friendly" || f.comp === "friendly_match" || f.comp === "national" || f.comp === "national_u21") return null;
   if (f.comp === "rpl" || f.comp === "fnl" || f.comp === "cup" || f.comp === "supercup" || (tid && (team(tid)?.comp === "rpl" || team(tid)?.comp === "fnl"))) {
     return getRplLegionLimit(f.season || S());
   }
@@ -6806,6 +6806,8 @@ var COMPS = [
   { id: "media_div2", name: "\u0412\u0442\u043E\u0440\u043E\u0439 \u0434\u0438\u0432\u0438\u0437\u0438\u043E\u043D (\u041C\u0435\u0434\u0438\u0430\u043B\u0438\u0433\u0430)", type: "league", tier: 6, level: "8 \u043A\u043E\u043C\u0430\u043D\u0434 \xB7 \u041F\u043B\u0435\u0439-\u043E\u0444\u0444 \u0442\u043E\u043F-4", logo: "/logos/leagues/media.svg" },
   { id: "media_cup", name: "Winline \u041A\u0443\u0431\u043E\u043A \u041B\u0438\u0433\u0438 (2026)", type: "cup", tier: 5, level: "20 \u043A\u043E\u043C\u0430\u043D\u0434 \xB7 4 \u0433\u0440\u0443\u043F\u043F\u044B \u043F\u043E 5 \u043A\u043E\u043C\u0430\u043D\u0434", logo: "/logos/leagues/media.svg" },
   { id: "friendly_match", name: "\u0422\u043E\u0432\u0430\u0440\u0438\u0449\u0435\u0441\u043A\u0438\u0435 \u043C\u0430\u0442\u0447\u0438", type: "friendly", level: "\u0422\u043E\u0432\u0430\u0440\u0438\u0449\u0435\u0441\u043A\u0438\u0435 \u043C\u0430\u0442\u0447\u0438 \u0432 \u043F\u0430\u0443\u0437\u044B \u043D\u0430 \u0441\u0431\u043E\u0440\u043D\u044B\u0435", logo: "/logos/leagues/cup.svg" },
+  { id: "national", name: "Сборная России", type: "national", level: "Международные и товарищеские матчи", logo: "/assets/aistudio/russia_russia-national-team.football-logos.cc_2a5e3ddc.svg" },
+  { id: "national_u21", name: "Сборная России U21", type: "national", level: "Молодёжная сборная до 21 года", logo: "/assets/aistudio/russia_russia-national-team.football-logos.cc_2a5e3ddc.svg" },
   { id: "europe", name: "\u0415\u0432\u0440\u043E\u043F\u0430 (\u0437\u0430\u0440\u0443\u0431\u0435\u0436\u043D\u044B\u0435 \u043A\u043B\u0443\u0431\u044B)", type: "abroad", tier: 99, level: "\u0415\u0432\u0440\u043E\u043F\u0435\u0439\u0441\u043A\u0438\u0435 \u0438 \u0437\u0430\u0440\u0443\u0431\u0435\u0436\u043D\u044B\u0435 \u043A\u043B\u0443\u0431\u044B", logo: "/logos/leagues/cup.svg" }
 ];
 var FRIENDLY_COMP = "friendly_match";
@@ -8391,6 +8393,11 @@ function load() {
   for (const k of ["comps", "teams", "players", "fixtures", "derbies", "transfers", "llmlog", "tournaments", "transferRequests", "budgetHistory", "clubNotifications", "clubWatchlist", "clubCoachWatchlist", "staffOffers", "coachRequests", "staffRoles"]) {
     if (!Array.isArray(db[k])) db[k] = [];
   }
+  for (const defComp of COMPS) {
+    if (!db.comps.some((c: any) => c && c.id === defComp.id)) {
+      db.comps.push({ ...defComp });
+    }
+  }
   if (!db.awayLogistics || typeof db.awayLogistics !== "object" || Array.isArray(db.awayLogistics)) {
     db.awayLogistics = {};
   }
@@ -8837,14 +8844,15 @@ function ensureNtTeams() {
   const defs: [string, string][] = [["main", "Сборная России"], ["u21", "Сборная России U21"]];
   for (const [type, name] of defs) {
     const id = NT_TID[type];
+    const compId = type === "u21" ? "national_u21" : "national";
     let t = db.teams.find((x) => x.id === id);
     if (!t) {
-      t = { id, name, comp: "friendly", city: "Москва", country: "Россия", lat: null, lon: null, stadium: "", logo: "/assets/aistudio/russia_russia-national-team.football-logos.cc_2a5e3ddc.svg", national: type };
+      t = { id, name, comp: compId, city: "Москва", country: "Россия", lat: null, lon: null, stadium: type === "u21" ? "«Арена Химки»" : "БСА «Лужники»", logo: "/assets/aistudio/russia_russia-national-team.football-logos.cc_2a5e3ddc.svg", national: type };
       db.teams.push(t);
       ch = true;
-    } else if (t.national !== type) {
-      t.national = type;
-      ch = true;
+    } else {
+      if (t.national !== type) { t.national = type; ch = true; }
+      if (t.comp !== compId) { t.comp = compId; ch = true; }
     }
   }
   return ch;
@@ -8883,6 +8891,367 @@ function squadOf(tid) {
   if (ntType) return ntActiveIds(ntType).map(player).filter(Boolean);
   const ids = db.squads[tid];
   return Array.isArray(ids) ? ids.map(player).filter((p) => p && p.teamId === tid) : [];
+}
+var FOREIGN_NT_NAME_BANKS: Record<string, { capital: string; stadium: string; coach: string; first: string[]; last: string[] }> = {
+  "иран": { capital: "Тегеран", stadium: "Стадион «Азади»", coach: "Амир Галенои", first: ["Алиреза", "Мехди", "Сердар", "Саман", "Мохаммад", "Саид", "Маджид", "Милад", "Шоджа", "Рамин", "Рузбех", "Омид"], last: ["Бейранванд", "Тареми", "Азмун", "Годдос", "Джаханбахш", "Эзатолахи", "Мохаммади", "Халилзаде", "Канаани", "Хоссейни", "Мохеби", "Нурафкан"] },
+  "сербия": { capital: "Белград", stadium: "Стадион «Райко Митич»", coach: "Драган Стойкович", first: ["Предраг", "Душан", "Александар", "Сергей", "Никола", "Филип", "Страхиня", "Саша", "Лука", "Неманья", "Иван", "Андрия"], last: ["Райкович", "Влахович", "Митрович", "Милинкович-Савич", "Миленкович", "Костич", "Павлович", "Лукич", "Йович", "Гудель", "Живкович", "Илич"] },
+  "камерун": { capital: "Яунде", stadium: "Стадион «Олембе»", coach: "Марк Брис", first: ["Андре", "Венсан", "Бриан", "Карл", "Андре-Франк", "Жан-Шарль", "Кристофер", "Нуху", "Фай", "Оливье", "Мартин", "Николас"], last: ["Онана", "Абубакар", "Мбемо", "Токо-Экамби", "Замбо-Ангисса", "Кастеллетто", "Ву", "Толо", "Коллинз", "Нтчам", "Хонгла", "Нгамалё"] },
+  "узбекистан": { capital: "Ташкент", stadium: "Стадион «Бунёдкор»", coach: "Тимур Кападзе", first: ["Уткир", "Элдор", "Аббосбек", "Отабек", "Остон", "Жалолиддин", "Абдукодир", "Рустам", "Ходжиакбар", "Шерзод", "Одилжон", "Игорь"], last: ["Юсупов", "Шомуродов", "Файзуллаев", "Шукуров", "Урунов", "Машарипов", "Хусанов", "Ашурматов", "Алижонов", "Насруллаев", "Хамробеков", "Сергеев"] },
+  "сирия": { capital: "Дамаск", stadium: "Стадион «Аббасийин»", coach: "Хосе Лана", first: ["Ибрагим", "Омар", "Мохаммад", "Махмуд", "Таер", "Аммар", "Айхам", "Халиль", "Абдул", "Фахд", "Эсекьель", "Пабло"], last: ["Альма", "Хрибин", "Аль-Сома", "Аль-Мавас", "Крома", "Рамадан", "Усу", "Элиас", "Аль-Аджан", "Юссеф", "Хам", "Саббаг"] },
+  "беларусь": { capital: "Минск", stadium: "Стадион «Динамо»", coach: "Карлос Алос", first: ["Фёдор", "Сергей", "Владислав", "Кирилл", "Евгений", "Макс", "Денис", "Захар", "Валерий", "Артём", "Никита", "Павел"], last: ["Лапоухов", "Политевич", "Морозов", "Печенин", "Яблонский", "Эбонг", "Поляков", "Волков", "Громыко", "Шуманский", "Корзун", "Савицкий"] },
+  "парагвай": { capital: "Асунсьон", stadium: "«Дефенсорес дель Чако»", coach: "Густаво Альфаро", first: ["Роберто", "Мигель", "Хулио", "Антонио", "Густаво", "Омар", "Матиас", "Андрес", "Рамон", "Диего", "Фабиан", "Алекс"], last: ["Фернандес", "Альмирон", "Энсисо", "Санабрия", "Гомес", "Альдерете", "Вильясанти", "Кубас", "Соса", "Бобуадилья", "Бальбуэна", "Арсе"] },
+  "нигерия": { capital: "Абуджа", stadium: "Национальный стадион Абуджи", coach: "Эрик Шелль", first: ["Стэнли", "Виктор", "Адемола", "Алекс", "Вилфред", "Калвин", "Уильям", "Сэмюэл", "Ола", "Франк", "Мозес", "Рафаэль"], last: ["Нвабили", "Осимхен", "Лукман", "Ивоби", "Ндиди", "Бэсси", "Трост-Эконг", "Чуквуезе", "Айна", "Оньека", "Симон", "Оньедика"] },
+  "эквадор": { capital: "Кито", stadium: "Стадион «Родриго Пас Дельгадо»", coach: "Себастьян Беккасесе", first: ["Эрнан", "Эннер", "Мойсес", "Пьеро", "Виллиан", "Первис", "Анхело", "Алан", "Гонсало", "Кевин", "Феликс", "Карлос"], last: ["Галиндес", "Валенсия", "Кайседо", "Инкапье", "Пачо", "Эступиньян", "Пресиадо", "Франко", "Плата", "Родригес", "Торрес", "Груэсо"] },
+  "казахстан": { capital: "Астана", stadium: "«Астана Арена»", coach: "Али Алиев", first: ["Игорь", "Нуралы", "Бахтиёр", "Асхат", "Максим", "Ислам", "Ян", "Александр", "Эльхан", "Абат", "Рамазан", "Марат"], last: ["Шацкий", "Алип", "Зайнутдинов", "Тагыберген", "Самородов", "Чесноков", "Вороговский", "Марочкин", "Астанов", "Аймбетов", "Оразов", "Быстров"] },
+  "турция": { capital: "Анкара", stadium: "Стадион «Эрьяман»", coach: "Винченцо Монтелла", first: ["Мерт", "Хакан", "Арда", "Кенан", "Керем", "Оркун", "Мерих", "Чаглар", "Ферди", "Барыш", "Исмаил", "Юнус"], last: ["Гюнок", "Чалханоглу", "Гюлер", "Йылдыз", "Актюркоглу", "Кёкчю", "Демирал", "Сёюнджю", "Кадыоглу", "Йылмаз", "Юксек", "Акгюн"] },
+  "египет": { capital: "Каир", stadium: "Каирский международный стадион", coach: "Хоссам Хассан", first: ["Мохамед", "Омар", "Махмуд", "Ахмед", "Рами", "Марван", "Имам", "Тарек", "Хамди", "Мостафа", "Яссер", "Халид"], last: ["Салах", "Мармуш", "Трезеге", "Зизо", "Рабиа", "Аттия", "Ашур", "Хамед", "Фатхи", "Мохамед", "Ибрагим", "Собхи"] }
+};
+var FOREIGN_NT_FALLBACK_FIRST = ["Марко", "Лукас", "Давид", "Даниэль", "Томас", "Алекс", "Самуэль", "Николас", "Андреас", "Эмиль", "Иван", "Карлос"];
+var FOREIGN_NT_FALLBACK_LAST = ["Силва", "Ковач", "Петрович", "Мендеш", "Мюллер", "Новак", "Морено", "Траоре", "Хасан", "Ким", "Диаш", "Хан"];
+function stripNationalOpponentCountry(rawOpp: string): { cleanName: string; country: string; isU21: boolean } {
+  const s = String(rawOpp || "").trim();
+  const isU21 = /\bu21\b|u-21|молод[её]ж/i.test(s);
+  const country = s
+    .replace(/\bU-?21\b/gi, "")
+    .replace(/^(?:молод[её]жная\s+)?(?:сборная\s+)?/i, "")
+    .replace(/\s+/g, " ")
+    .trim() || s;
+  return { cleanName: s, country, isU21 };
+}
+function slugifyNtId(s: string): string {
+  const map: Record<string, string> = { "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e", "ж": "zh", "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m", "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u", "ф": "f", "х": "h", "ц": "ts", "ч": "ch", "ш": "sh", "щ": "sch", "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu", "я": "ya" };
+  return String(s || "").toLowerCase().split("").map((ch) => map[ch] ?? ch).join("").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "team";
+}
+function generateForeignNationalSquad(teamObj: any, country: string, isU21: boolean) {
+  const tid = teamObj.id;
+  const key = String(country || "").trim().toLowerCase();
+  const bank = FOREIGN_NT_NAME_BANKS[key] || { capital: country, stadium: `Национальный стадион (${country})`, coach: `Главный тренер (${country})`, first: FOREIGN_NT_FALLBACK_FIRST, last: FOREIGN_NT_FALLBACK_LAST };
+  const positions = [
+    "ВР", "ВР", "ВР",
+    "ПЗ", "ЦЗ", "ЦЗ", "ЛЗ", "ЦЗ", "ЦЗ", "ПЗ", "ЛЗ",
+    "ОП", "ЦП", "АП", "ЦП", "ОП", "ПП", "ЛП",
+    "ПВ", "ЛВ", "ЦФ", "ЦФ", "ПВ"
+  ];
+  const curYear = parseInt(String(db?.settings?.season || S()).slice(0, 4), 10) || 2026;
+  const ids: string[] = [];
+  const usedNames = new Set<string>();
+  for (let idx = 0; idx < positions.length; idx++) {
+    const pos = positions[idx];
+    let fullName = "";
+    for (let tryN = 0; tryN < 12; tryN++) {
+      const fn = bank.first[(idx * 3 + tryN) % bank.first.length];
+      const ln = bank.last[(idx * 5 + tryN * 2) % bank.last.length];
+      const cand = `${fn} ${ln}`;
+      if (!usedNames.has(cand)) { fullName = cand; break; }
+    }
+    if (!fullName) fullName = `${bank.first[idx % bank.first.length]} ${bank.last[idx % bank.last.length]} ${idx + 1}`;
+    usedNames.add(fullName);
+    const pAge = isU21 ? (18 + (idx % 4)) : (20 + (idx % 12));
+    const birthYear = curYear - pAge;
+    const birthMonth = String((idx % 12) + 1).padStart(2, "0");
+    const birthDay = String(((idx * 3) % 27) + 1).padStart(2, "0");
+    const pid = `p_${tid}_${idx + 1}`;
+    const existing = player(pid);
+    if (!existing) {
+      db.players.push({
+        id: pid,
+        teamId: tid,
+        name: fullName,
+        pos,
+        altPositions: [],
+        num: idx + 1,
+        born: `${birthYear}-${birthMonth}-${birthDay}`,
+        age: pAge,
+        nation: country,
+        foot: idx % 4 === 0 ? "левая" : "правая",
+        rating: isU21 ? (68 + (idx % 6)) : (73 + (idx % 8)),
+        playedForOtherNationalTeam: true,
+        otherNationalTeam: country,
+        foreignNational: true,
+        style: pos === "ВР" ? "надёжный на линии и при выходах" : "сбалансированный, дисциплинированный",
+        stats2y: `Игрок национальной сборной ${country}${isU21 ? " U21" : ""}`,
+        form: "готовится к матчу сборной в отличном тонусе",
+        character: "выдержанный, заряжен на матч сборной"
+      });
+    }
+    ids.push(pid);
+  }
+  db.squads[tid] = ids;
+  return ids;
+}
+function ensureForeignNationalTeam(rawOppName: string, defaultU21: boolean) {
+  ensureNtTeams();
+  const s = String(rawOppName || "").trim();
+  const low = s.toLowerCase();
+  if (/^(?:сборная\s+)?(?:росси[ия]|рф)(?:\s|$)/i.test(low)) {
+    const oppIsU21 = /\bu21\b|u-21|молод[её]ж/i.test(low);
+    return team(oppIsU21 ? NT_TID.u21 : NT_TID.main);
+  }
+  const { country, isU21: parsedU21 } = stripNationalOpponentCountry(s);
+  const isU21 = parsedU21 || defaultU21;
+  const key = String(country || "").trim().toLowerCase();
+  const bank = FOREIGN_NT_NAME_BANKS[key];
+  const displayName = s.startsWith("Сборная") ? s : (isU21 && !/\bu21\b/i.test(s) ? `${country} U21` : s);
+  const tid = `tm_ntf_${slugifyNtId(displayName)}`;
+  let t = db.teams.find((x) => x.id === tid);
+  const compId = isU21 ? "national_u21" : "national";
+  if (!t) {
+    const existingByName = db.teams.find((x) => String(x.name || "").trim().toLowerCase() === displayName.toLowerCase() && (x.national || x.nationalForeign));
+    if (existingByName) {
+      t = existingByName;
+    } else {
+      t = {
+        id: tid,
+        name: displayName,
+        comp: compId,
+        city: bank?.capital || country || "",
+        country: country || displayName,
+        stadium: bank?.stadium || `Национальный стадион (${country || displayName})`,
+        logo: getTeamLogo(displayName) || getTeamLogo(country) || "/logos/leagues/cup.svg",
+        national: "foreign",
+        nationalForeign: true
+      };
+      db.teams.push(t);
+    }
+  }
+  db.coaches ||= {};
+  if (!Array.isArray(db.coaches) && !db.coaches[t.id]) {
+    db.coaches[t.id] = {
+      id: `coach_${t.id}`,
+      name: bank?.coach || `Главный тренер ${t.name}`,
+      club: t.name,
+      clubName: t.name,
+      nationality: country || displayName,
+      age: 49,
+      style: "possession",
+      styleTitle: "Сбалансированный международный стиль",
+      favoriteFormation: "4-3-3",
+      reputation: 78,
+      temperament: "Уравновешенный",
+      quote: "Мы уважаем соперника, но выходим играть на победу."
+    };
+  }
+  if (squadOf(t.id).length < 15) {
+    generateForeignNationalSquad(t, country || displayName, isU21);
+  }
+  return t;
+}
+function ensureRussiaNationalSquadForSim(ntType: "main" | "u21") {
+  const nt = ensureNationalTeam(ntType);
+  if (ntActiveIds(ntType).length >= 15) return false;
+  let pool2 = (db.players || []).filter((p) => isRussianNationalEligible(p, ntType) && !p.foreignNational);
+  if (ntType === "u21") {
+    const senior = ensureNationalTeam("main");
+    const seniorSet = new Set(senior.current?.final || senior.current?.extended || []);
+    const withoutSenior = pool2.filter((p) => !seniorSet.has(p.id));
+    if (withoutSenior.length >= 23) pool2 = withoutSenior;
+  }
+  const scored = pool2
+    .map((p) => ({ p, st: getPlayerNationalStats(p) }))
+    .sort((a, b) => ((b.st.avgRating || 6.5) * 10 + (b.st.goals || 0) * 2 + (b.st.matches || 0)) - ((a.st.avgRating || 6.5) * 10 + (a.st.goals || 0) * 2 + (a.st.matches || 0)));
+  const chosen: string[] = [];
+  const have = new Set<string>();
+  const quotas = [
+    { poses: new Set(["ВР"]), min: 3 },
+    { poses: new Set(["ЦЗ", "ЛЗ", "ПЗ", "ЛФЗ", "ПФЗ"]), min: 8 },
+    { poses: new Set(["ОП", "ЦП", "ПП", "ЛП", "АП"]), min: 8 },
+    { poses: new Set(["ЦФ", "ПВ", "ЛВ", "СТ"]), min: 4 }
+  ];
+  for (const q of quotas) {
+    let taken = 0;
+    for (const item of scored) {
+      if (taken >= q.min) break;
+      if (!have.has(item.p.id) && q.poses.has(String(item.p.pos || ""))) {
+        chosen.push(item.p.id);
+        have.add(item.p.id);
+        taken++;
+      }
+    }
+  }
+  for (const item of scored) {
+    if (chosen.length >= 25) break;
+    if (!have.has(item.p.id)) {
+      chosen.push(item.p.id);
+      have.add(item.p.id);
+    }
+  }
+  if (!chosen.length) return false;
+  nt.current.extended = chosen.slice();
+  if (nt.current.stage === "final" && (!Array.isArray(nt.current.final) || nt.current.final.length < 15)) {
+    nt.current.final = chosen.slice(0, 25);
+  }
+  return true;
+}
+function findLinkedNationalMatchByFixture(f: any): { tt: "main" | "u21"; nt: any; m: any } | null {
+  if (!f) return null;
+  for (const tt of ["main", "u21"] as const) {
+    const nt = ensureNationalTeam(tt);
+    const list = nt?.current?.matches || [];
+    const found = list.find((m: any) => m && (m.fixtureId === f.id || f.ntMatchId === m.id || f.id === `ntfix_${tt}_${m.id}`));
+    if (found) return { tt, nt, m: found };
+  }
+  return null;
+}
+function syncNationalTeamFixtures() {
+  if (!db) return false;
+  let ch = ensureNtTeams();
+  const activeNtIds = new Set<string>();
+  const curSeason = S();
+  for (const tt of ["main", "u21"] as const) {
+    const nt = ensureNationalTeam(tt);
+    const compId = tt === "u21" ? "national_u21" : "national";
+    const ruTid = NT_TID[tt];
+    const matches = Array.isArray(nt?.current?.matches) ? nt.current.matches : [];
+    for (const m of matches) {
+      if (!m || !m.opponent) continue;
+      if (!m.id) { m.id = uid(); ch = true; }
+      const oppTeam = ensureForeignNationalTeam(m.opponent, tt === "u21");
+      const isHome = m.home !== false;
+      const homeTid = isHome ? ruTid : oppTeam.id;
+      const awayTid = isHome ? oppTeam.id : ruTid;
+      const gDate = String(m.gameDate || m.date || "").trim();
+      const gTime = String(m.gameTime || m.time || "19:00").trim();
+      const rDate = String(m.realDate || m.date || gDate || todayMsk()).trim();
+      const rTime = String(m.realTime || m.time || gTime || "19:00").trim();
+      const fid = m.fixtureId || `ntfix_${tt}_${m.id}`;
+      activeNtIds.add(fid);
+      let f = fx(fid);
+      const label = nt.current?.title || (tt === "u21" ? "Сборная России U21 · Товарищеский матч" : "Сборная России · Товарищеский матч");
+      const stadium = String(m.stadium || (isHome ? (tt === "u21" ? "«Арена Химки» (г. Химки)" : "БСА «Лужники» (г. Москва)") : (oppTeam.stadium || `Национальный стадион (${oppTeam.country || oppTeam.name})`)) || "").trim();
+      const city = String(m.city || (isHome ? "Москва" : oppTeam.city || "") || "").trim();
+      if (!f) {
+        f = {
+          id: fid,
+          season: curSeason,
+          comp: compId,
+          round: 1,
+          label,
+          date: gDate || rDate,
+          time: gTime,
+          gameDate: gDate || rDate,
+          gameTime: gTime,
+          realDate: rDate,
+          realTime: rTime,
+          home: homeTid,
+          away: awayTid,
+          status: m.status === "done" ? "done" : "scheduled",
+          hg: m.hg ?? null,
+          ag: m.ag ?? null,
+          pen: m.pen || null,
+          pos: 0,
+          ntTeamType: tt,
+          ntMatchId: m.id,
+          stadium,
+          city
+        };
+        try { assignFixtureWeather(f); } catch {}
+        db.fixtures.push(f);
+        ch = true;
+      } else {
+        if (f.comp !== compId) { f.comp = compId; ch = true; }
+        if (f.ntTeamType !== tt) { f.ntTeamType = tt; ch = true; }
+        if (f.ntMatchId !== m.id) { f.ntMatchId = m.id; ch = true; }
+        if (f.status === "scheduled") {
+          const nextDate = gDate || rDate;
+          if (f.home !== homeTid) { f.home = homeTid; ch = true; }
+          if (f.away !== awayTid) { f.away = awayTid; ch = true; }
+          if (nextDate && f.date !== nextDate) { f.date = nextDate; f.gameDate = nextDate; ch = true; }
+          if (f.time !== gTime) { f.time = gTime; f.gameTime = gTime; ch = true; }
+          if (rDate && f.realDate !== rDate) { f.realDate = rDate; ch = true; }
+          if (rTime && f.realTime !== rTime) { f.realTime = rTime; ch = true; }
+          if (stadium && f.stadium !== stadium) { f.stadium = stadium; ch = true; }
+          if (city && f.city !== city) { f.city = city; ch = true; }
+          if (f.label !== label) { f.label = label; ch = true; }
+        } else {
+          if (m.status !== f.status) { m.status = f.status; ch = true; }
+          if (m.hg !== f.hg) { m.hg = f.hg; ch = true; }
+          if (m.ag !== f.ag) { m.ag = f.ag; ch = true; }
+          if (f.pen && m.pen !== f.pen) { m.pen = f.pen; ch = true; }
+        }
+      }
+      if (m.fixtureId !== f.id) { m.fixtureId = f.id; ch = true; }
+      if (!m.realDate && f.realDate) { m.realDate = f.realDate; ch = true; }
+      if (!m.realTime && f.realTime) { m.realTime = f.realTime; ch = true; }
+    }
+  }
+  const beforeLen = (db.fixtures || []).length;
+  db.fixtures = (db.fixtures || []).filter((f) => {
+    if (!f) return false;
+    if ((f.comp === "national" || f.comp === "national_u21") && String(f.id || "").startsWith("ntfix_") && f.status === "scheduled" && !activeNtIds.has(f.id)) {
+      return false;
+    }
+    return true;
+  });
+  if (db.fixtures.length !== beforeLen) ch = true;
+  if (ch) invalidateAgg();
+  return ch;
+}
+function ensureApprovedFriendlyFixtures() {
+  if (!db || !Array.isArray(db.friendlyRequests)) return false;
+  let ch = false;
+  for (const r of db.friendlyRequests) {
+    if (!r) continue;
+    const clubOk = !r.needOpponentApproval || r.opponentApproval === "approved";
+    if (r.status === "pending" && r.adminApproval === "approved" && clubOk) {
+      const res = tryFinalizeFriendly(r);
+      if (res?.executed) ch = true;
+      continue;
+    }
+    if (r.status === "approved" && (!r.fixtureId || !fx(r.fixtureId))) {
+      const isIntra = !!r.intraSquad;
+      const A = team(r.clubId);
+      const B = isIntra ? A : team(r.opponentId);
+      if (!A || !B) continue;
+      const gameDate = r.gameDate || r.date;
+      const gameTime = r.gameTime || r.time || "15:00";
+      const realDate = r.realDate || r.date;
+      const realTime = r.realTime || r.time || "19:00";
+      const place = friendlyPlace(r);
+      const fid = r.fixtureId || uid();
+      const f: any = {
+        id: fid,
+        season: S(),
+        comp: FRIENDLY_COMP,
+        round: 1,
+        label: isIntra ? "Внутрикомандный спарринг" : "Товарищеский матч",
+        note: r.conditions,
+        date: gameDate,
+        time: gameTime,
+        gameDate,
+        gameTime,
+        realDate,
+        realTime,
+        home: place.home,
+        away: place.away,
+        intraSquad: isIntra || void 0,
+        homeLabel: isIntra ? (r.homeLabel || "Основа") : void 0,
+        awayLabel: isIntra ? (r.awayLabel || "Запас") : void 0,
+        status: "scheduled",
+        hg: null,
+        ag: null,
+        pos: 0,
+        friendlyId: r.id,
+        friendlyBudget: isIntra ? 0 : Math.round(Number(r.budget) || 0),
+        friendlyConditions: r.conditions,
+        nationalType: r.nationalType || void 0,
+        neutralField: place.neutral,
+        stadium: place.neutral ? `${place.stadium} (нейтральное поле${place.city ? ", г. " + place.city : ""})` : place.stadium,
+        city: place.city || void 0
+      };
+      if (!f.city) delete f.city;
+      if (!f.intraSquad) {
+        delete f.intraSquad;
+        delete f.homeLabel;
+        delete f.awayLabel;
+      }
+      db.fixtures.push(f);
+      try { assignFixtureWeather(f); } catch {}
+      r.fixtureId = f.id;
+      ch = true;
+    }
+  }
+  if (ch) invalidateAgg();
+  return ch;
 }
 function getCurrentRplRound(season = S()) {
   let maxR = 0;
@@ -9117,7 +9486,7 @@ function migrateDisciplineByComp() {
   if (!db || !Array.isArray(db.players)) return;
   if (!db.settings) db.settings = {};
   if (db.settings.discByCompV1) return;
-  const doneOfficial = seasonFx().filter((f) => f.status === "done" && f.comp !== FRIENDLY_COMP && !f.tech).sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
+  const doneOfficial = seasonFx().filter((f) => f.status === "done" && f.comp !== FRIENDLY_COMP && f.comp !== "national" && f.comp !== "national_u21" && !f.tech).sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
   const ycMap = new Map<string, Record<string, number>>();
   const lastRedComp = new Map<string, string>();
   const staffEvents: Array<{ tid: string; name: string; comp: string; type: string; ban_matches?: number; text?: string }> = [];
@@ -12375,6 +12744,9 @@ function motivText(tid, f, displayName?: string) {
   const lbl = displayName || team(tid)?.name;
   if (isIntraSquad(f)) return `${lbl}: внутренний тренировочный спарринг (матч внутри одного клуба) — турнирных очков нет, игроки хорошо знают друг друга, борьба за место в стартовом составе и проверка тактических связок. ${f.friendlyConditions ? "Условия матча: " + f.friendlyConditions + ". " : ""}`;
   if (f.comp === FRIENDLY_COMP) return `${lbl}: \u0442\u043E\u0432\u0430\u0440\u0438\u0449\u0435\u0441\u043A\u0438\u0439 \u043C\u0430\u0442\u0447 \u0432 \u043F\u0430\u0443\u0437\u0443 \u043D\u0430 \u0441\u0431\u043E\u0440\u043D\u044B\u0435 \u2014 \u0442\u0443\u0440\u043D\u0438\u0440\u043D\u044B\u0445 \u043E\u0447\u043A\u043E\u0432 \u043D\u0435\u0442, \u0442\u0440\u0435\u043D\u0435\u0440 \u0432\u043F\u0440\u0430\u0432\u0435 \u044D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441 \u0441\u043E\u0441\u0442\u0430\u0432\u043E\u043C \u0438 \u0440\u043E\u0442\u0430\u0446\u0438\u0435\u0439, \u0438\u043D\u0442\u0435\u043D\u0441\u0438\u0432\u043D\u043E\u0441\u0442\u044C \u043D\u0438\u0436\u0435, \u043D\u043E \u0441\u0430\u043C\u043E\u043B\u044E\u0431\u0438\u0435 \u0438 \u0436\u0435\u043B\u0430\u043D\u0438\u0435 \u043F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0441\u0435\u0431\u044F \u043E\u0441\u0442\u0430\u044E\u0442\u0441\u044F. ${f.friendlyConditions ? "\u0423\u0441\u043B\u043E\u0432\u0438\u044F \u043C\u0430\u0442\u0447\u0430: " + f.friendlyConditions + ". " : ""}`;
+  if (f.comp === "national" || f.comp === "national_u21") {
+    return `${lbl}: международный матч национальной сборной (${f.label || compName(f)}) — престиж страны, проверка игровых связок в международную паузу и борьба игроков за место в заявке сборной.`;
+  }
   const t = team(tid);
   const comp = compOf(t.comp);
   const rows = table(t.comp, f.date);
@@ -12407,6 +12779,16 @@ function fatText(tid, f) {
   return s;
 }
 function teamLeagueProfile(tm: any) {
+  if (tm?.national || tm?.nationalForeign || ntTypeOfTid(tm?.id)) {
+    const ntName = tm?.national === "u21" ? "Молодёжная сборная U21" : tm?.national === "main" ? "Национальная сборная России" : `Национальная сборная (${tm?.country || tm?.name || "международный уровень"})`;
+    return {
+      compId: tm?.national === "u21" ? "national_u21" : "national",
+      name: ntName,
+      tier: tm?.national === "u21" ? 2 : 1,
+      subTier: tm?.national === "u21" ? 2 : 1,
+      level: "Уровень национальных сборных"
+    };
+  }
   const compId = String(tm?.comp || "").trim();
   const cObj = compId ? compOf(compId) : null;
   let tier = Number(cObj?.tier || 0);
@@ -12723,6 +13105,12 @@ async function buildCtx(f) {
   const usedAcrossIntra = new Set<string>();
   for (const s of ["home", "away"] as const) {
     const tid = f[s];
+    const ntType = ntTypeOfTid(tid);
+    if (ntType) {
+      ensureRussiaNationalSquadForSim(ntType);
+    } else if (team(tid)?.nationalForeign && squadOf(tid).length < 15) {
+      ensureForeignNationalTeam(team(tid).name, f.comp === "national_u21");
+    }
     let L = getLineup(f, tid, s, (intra && s === "away") ? usedAcrossIntra : undefined);
     if (intra && s === "away" && L.starters.length < 11) {
       const homeStartersOnly = new Set<string>(ctx.lineup.home?.starters || []);
@@ -15067,7 +15455,7 @@ function buildLiveStatsPayload(m: any, f: any) {
 var live = {};
 var timers = {};
 var fullSim = (f) => true;
-var AUTO_COMPS = /* @__PURE__ */ new Set(["rpl", "fnl", "cup", "supercup", "playoff", "playoff_rpl_fnl", "friendly_match"]);
+var AUTO_COMPS = /* @__PURE__ */ new Set(["rpl", "fnl", "cup", "supercup", "playoff", "playoff_rpl_fnl", "friendly_match", "national", "national_u21"]);
 var isMediaFx = (f) => String(f.comp || "").startsWith("media") || String(f.playoffTieId || "").startsWith("media");
 var isAutoFx = (f) => AUTO_COMPS.has(f.comp) && !isMediaFx(f);
 var isLightFx = (f) => !isAutoFx(f) && (/^(2la|2lb|media)/.test(String(f.comp || "")) || isMediaFx(f));
@@ -15083,7 +15471,7 @@ function hasStaffRole(tid, role) {
 }
 function getOfficialTechDefeatComps() {
   const src = (Array.isArray(db?.comps) && db.comps.length ? db.comps : COMPS)
-    .filter((c) => c && c.id && c.id !== FRIENDLY_COMP && c.type !== "friendly" && c.type !== "abroad");
+    .filter((c) => c && c.id && c.id !== FRIENDLY_COMP && c.type !== "friendly" && c.type !== "abroad" && c.type !== "national");
   const out: Array<{ id: string; name: string; type: string; level: string }> = [];
   for (const c of src) {
     if (c.id === "cup") {
@@ -15121,7 +15509,7 @@ function resolveTechDefeatCompKey(f: any) {
 function isTechDefeatEnabledForFixture(f: any) {
   if (db?.settings?.techDefeat !== true) return false;
   const raw = String(f?.comp || "").trim();
-  if (!raw || raw === FRIENDLY_COMP || raw === "friendly" || raw === "europe" || raw === "national") return false;
+  if (!raw || raw === FRIENDLY_COMP || raw === "friendly" || raw === "europe" || raw === "national" || raw === "national_u21") return false;
   if (!Array.isArray(db.settings.techDefeatComps)) return true;
   const key = resolveTechDefeatCompKey(f);
   if (raw === "cup") {
@@ -15507,7 +15895,7 @@ function startLive(id) {
   let lastLiveSaveAt = Date.now();
   live[id] ||= { clients: /* @__PURE__ */ new Set() };
   if (f.pos === 0) {
-    tgComp(f?.comp || "rpl", `🏟 <b>${esc(tn(f.home))} — ${esc(tn(f.away))}</b>
+    tgComp(f?.comp || "rpl", `🏟 <b>${esc(sideDisplayName(f, "home"))} — ${esc(sideDisplayName(f, "away"))}</b>
 ${esc(compName(f))}, ${esc(roundLabel(f))}
 Трансляция началась${db.settings.siteUrl ? `: ${esc(db.settings.siteUrl)}/#/match/${id}` : ""}`, { ruleKey: "liveMatchEvents", kind: "match_start" });
     if (tgSendMatchInterviews(f, m, "preMatch")) {
@@ -15693,8 +16081,18 @@ async function finish(id) {
   updateMoraleAfterMatch(getMoraleCtx(), f, m);
   if (f.comp === "cup") advanceCup();
   const isFriendlyMatch = f.comp === FRIENDLY_COMP;
+  const isNationalMatch = f.comp === "national" || f.comp === "national_u21";
+  const skipClubDisc = isFriendlyMatch || isNationalMatch;
+  const linkedNt = findLinkedNationalMatchByFixture(f);
+  if (linkedNt) {
+    linkedNt.m.status = "done";
+    linkedNt.m.hg = f.hg;
+    linkedNt.m.ag = f.ag;
+    linkedNt.m.pen = f.pen || null;
+    linkedNt.m.fixtureId = f.id;
+  }
   const matchComp = normDiscComp(f.comp);
-  if (!isFriendlyMatch && matchComp) {
+  if (!skipClubDisc && matchComp) {
     const servedPids = new Set<string>();
     const servePlayerBan = (p: any) => {
       if (!p || servedPids.has(p.id)) return;
@@ -15740,7 +16138,7 @@ async function finish(id) {
   }
   for (const e of m.events) {
     if (e.person && (e.type === "yellow" || e.type === "red")) {
-      if (isFriendlyMatch || !matchComp) continue;
+      if (skipClubDisc || !matchComp) continue;
       const tid = f[e.team];
       if (!tid) continue;
       const d = getDisc(tid, e.person);
@@ -15763,7 +16161,7 @@ async function finish(id) {
       const days = e.out_days || 14;
       p.out = { until: addDays(f.date, days), days, label: daysLabel(days), reason: e.text.slice(0, 120) };
     }
-    if (isFriendlyMatch || !matchComp) continue;
+    if (skipClubDisc || !matchComp) continue;
     if (e.type === "red") {
       if (e.ban_days) {
         p.banUntil = addDays(f.date, e.ban_days);
@@ -15802,7 +16200,7 @@ async function finish(id) {
   invalidateAgg();
   advanceCup();
   saveNow(true);
-  if (!isFriendlyMatch) checkForeignInterestAfterMatch(db, m, f).then((newOffers) => {
+  if (!skipClubDisc) checkForeignInterestAfterMatch(db, m, f).then((newOffers) => {
     save();
     if (newOffers && newOffers.length > 0) {
       for (const o of newOffers) {
@@ -17377,7 +17775,7 @@ async function maybeSendRoundAwardsToTg(finishedFixture: any) {
       return await channelsCtrl.handleRoundCompleted(finishedFixture);
     }
     if (!finishedFixture || !db?.settings) return;
-    if (finishedFixture.comp === FRIENDLY_COMP) return;
+    if (finishedFixture.comp === FRIENDLY_COMP || finishedFixture.comp === "national" || finishedFixture.comp === "national_u21") return;
     const season = finishedFixture.season || S();
     const comp = finishedFixture.comp;
     const rLabel = roundLabel(finishedFixture);
@@ -18526,7 +18924,7 @@ function ensureDualTimes(targetSeason, force = false) {
     });
   }
   if (enforceRplCupRealDateSeparation(seasonFixtures)) changed = true;
-  seasonFixtures.filter((f) => f.comp !== "rpl" && f.comp !== "cup" && f.comp !== "supercup").forEach((f) => {
+  seasonFixtures.filter((f) => f.comp !== "rpl" && f.comp !== "cup" && f.comp !== "supercup" && f.comp !== "national" && f.comp !== "national_u21").forEach((f) => {
     const rnd = Number(f.round) || 1;
     if (!f.realDate || force && f.comp !== FRIENDLY_COMP) {
       const rd = addDays(baseRealStart, rnd - 1);
@@ -19233,6 +19631,8 @@ var pubTeam = (t) => {
     isAbroad: t.comp === "europe",
     city: t.city,
     stadium: t.stadium,
+    national: t.national || void 0,
+    nationalForeign: !!t.nationalForeign,
     logo: official.startsWith("/assets/") ? official : t.logo || official,
     colors: getTeamColors(t.name),
     parentTeamId: t.parentTeamId || null,
@@ -19710,9 +20110,11 @@ function getHeadToHead(homeTid, awayTid, currentFixtureId) {
       matches: []
     };
   }
+  const isNatPair = !!(ntTypeOfTid(homeTid) || ntTypeOfTid(awayTid) || H?.nationalForeign || A?.nationalForeign);
   const realPlayed = (db.fixtures || []).filter((f) => {
     if (currentFixtureId && f.id === currentFixtureId) return false;
     if (f.status !== "done" || f.comp === FRIENDLY_COMP) return false;
+    if ((f.comp === "national" || f.comp === "national_u21") && !isNatPair) return false;
     return f.home === homeTid && f.away === awayTid || f.home === awayTid && f.away === homeTid;
   }).sort((a, b) => ((b.date || "") + (b.time || "")).localeCompare((a.date || "") + (a.time || "")));
   const matches = [];
@@ -21867,7 +22269,7 @@ app.get("/api/players/search", (req, res) => {
   const q2 = norm(req.query.q);
   if (q2.length < 2) return res.json([]);
   const lim = Math.max(1, Math.min(40, Number(req.query.limit) || 12));
-  res.json(db.players.filter((p) => norm(p.name).includes(q2)).sort((a, b) => (norm(a.name).startsWith(q2) ? 0 : 1) - (norm(b.name).startsWith(q2) ? 0 : 1)).slice(0, lim).map(pubPlayer));
+  res.json(db.players.filter((p) => !p.foreignNational && norm(p.name).includes(q2)).sort((a, b) => (norm(a.name).startsWith(q2) ? 0 : 1) - (norm(b.name).startsWith(q2) ? 0 : 1)).slice(0, lim).map(pubPlayer));
 });
 app.get("/api/player/:id/stats", (req, res) => {
   const pid = String(req.params.id || "").trim();
@@ -25425,7 +25827,7 @@ app.post("/api/admin/settings", admin, async (req, res) => {
   if (b.auto !== void 0) s.auto = !!b.auto;
   if (b.techDefeat !== void 0) s.techDefeat = !!b.techDefeat;
   if (Array.isArray(b.techDefeatComps)) {
-    s.techDefeatComps = [...new Set(b.techDefeatComps.map((x) => String(x || "").trim()).filter((x) => x && x !== FRIENDLY_COMP && x !== "europe"))];
+    s.techDefeatComps = [...new Set(b.techDefeatComps.map((x) => String(x || "").trim()).filter((x) => x && x !== FRIENDLY_COMP && x !== "europe" && x !== "national" && x !== "national_u21"))];
   }
   if (b.grounding !== void 0) s.grounding = !!b.grounding;
   if (b.adsgramBlocks && typeof b.adsgramBlocks === "object") {
@@ -26064,14 +26466,14 @@ app.post("/api/admin/squads/import", admin, (req, res) => {
 });
 app.get("/api/admin/players", admin, (req, res) => {
   const q2 = norm(req.query.q || "");
-  let l = db.players;
   const tidF = String(req.query.teamId || "").trim();
+  let l = tidF ? db.players : db.players.filter((p) => !p.foreignNational);
   if (tidF === "__free__") {
-    l = l.filter((p) => !p.teamId && !p.abroadClub);
+    l = l.filter((p) => !p.teamId && !p.abroadClub && !p.foreignNational);
   } else if (tidF === "__europe__") {
-    l = l.filter((p) => (p.teamId && team(p.teamId)?.comp === "europe") || !!p.abroadClub);
+    l = l.filter((p) => !p.foreignNational && ((p.teamId && team(p.teamId)?.comp === "europe") || !!p.abroadClub));
   } else if (tidF === "__abroad_pool__") {
-    l = l.filter((p) => !p.teamId && !!p.abroadClub);
+    l = l.filter((p) => !p.foreignNational && !p.teamId && !!p.abroadClub);
   } else if (tidF) {
     l = l.filter((p) => p.teamId === tidF);
   }
@@ -26733,6 +27135,13 @@ app.post("/api/admin/fixture", admin, (req, res) => {
       if (queue[qi]?.id === f.id) queue.splice(qi, 1);
     }
     Object.assign(f, { status: "scheduled", hg: null, ag: null, pen: null, st: null, pos: 0, final: null, tech: null, note: "", motm: null, ht: null, lateGoal75: false, err: "", genProgress: null, hold: null, aiCalls: 0, noAuto: false, autoRetries: 0, autoRetryAt: 0, _genToken: null, _ownerId: null, _ownerAt: 0 });
+    const linkedNtReset = findLinkedNationalMatchByFixture(f);
+    if (linkedNtReset) {
+      linkedNtReset.m.status = "scheduled";
+      linkedNtReset.m.hg = null;
+      linkedNtReset.m.ag = null;
+      linkedNtReset.m.pen = null;
+    }
     try {
       fs3.unlinkSync(path3.join(MDIR, f.id + ".json"));
     } catch {
@@ -26769,6 +27178,13 @@ app.post("/api/admin/fixture", admin, (req, res) => {
     checkPlayoffShootout(f, getMatch(f.id));
     if (!hadPenManual && f.pen?.kicks?.length) {
       tgShootout(f);
+    }
+    const linkedNtDone = findLinkedNationalMatchByFixture(f);
+    if (linkedNtDone) {
+      linkedNtDone.m.status = "done";
+      linkedNtDone.m.hg = f.hg;
+      linkedNtDone.m.ag = f.ag;
+      linkedNtDone.m.pen = f.pen || null;
     }
     settlePredictionsForFixture(getAdsCtx(), f);
     invalidateAgg();
@@ -26842,6 +27258,16 @@ app.post("/api/admin/fixture", admin, (req, res) => {
   }
   if (req.body.neutralField !== void 0) {
     f.neutralField = !!req.body.neutralField;
+  }
+  const linkedNtSched = findLinkedNationalMatchByFixture(f);
+  if (linkedNtSched) {
+    linkedNtSched.m.date = f.gameDate || f.date;
+    linkedNtSched.m.gameDate = f.gameDate || f.date;
+    linkedNtSched.m.time = f.gameTime || f.time;
+    linkedNtSched.m.gameTime = f.gameTime || f.time;
+    linkedNtSched.m.realDate = f.realDate || linkedNtSched.m.realDate;
+    linkedNtSched.m.realTime = f.realTime || linkedNtSched.m.realTime;
+    if (f.stadium) linkedNtSched.m.stadium = f.stadium;
   }
   invalidateAgg();
   saveNow();
@@ -30167,7 +30593,7 @@ function buildNationalCallupReasonFallback(p: any, teamType: "main" | "u21" = "m
   return `Вызов под задачи штаба из состава «${clubLbl}»${bgShort}.`;
 }
 function isRussianNationalEligible(p: any, teamType: "main" | "u21" = "main") {
-  if (!p) return false;
+  if (!p || p.foreignNational) return false;
   const rawNat = String(p.nation || p.nationality || p.nat || p.country || "Россия").trim().toLowerCase();
   const hasRus = rawNat === "" || rawNat.includes("россия") || rawNat === "rus" || rawNat === "russia";
   if (!hasRus) return false;
@@ -30246,17 +30672,25 @@ function enrichNationalBreak(brk, teamType: "main" | "u21" = "main") {
     }
     return outObj;
   }).filter(Boolean).sort(compareNationalPlayersPosClubAge);
-  const matches = (brk.matches || []).map((m) => ({
-    ...m,
-    teamType: tt,
-    teamLabel: tt === "u21" ? "Россия U21" : "Россия",
-    gameDate: m.gameDate || m.date,
-    gameTime: m.gameTime || m.time || "19:00",
-    realDate: m.realDate || m.date,
-    realTime: m.realTime || m.time || "19:00",
-    russiaLogo: "/assets/aistudio/russia_russia-national-team.football-logos.cc_2a5e3ddc.svg",
-    opponentLogo: teamLogo(m.opponent)
-  }));
+  const matches = (brk.matches || []).map((m) => {
+    const fxObj = fx(m.fixtureId || `ntfix_${tt}_${m.id}`);
+    return {
+      ...m,
+      fixtureId: fxObj?.id || m.fixtureId || null,
+      status: fxObj?.status || m.status || "scheduled",
+      hg: fxObj ? fxObj.hg : (m.hg ?? null),
+      ag: fxObj ? fxObj.ag : (m.ag ?? null),
+      pen: fxObj?.pen || m.pen || null,
+      teamType: tt,
+      teamLabel: tt === "u21" ? "Россия U21" : "Россия",
+      gameDate: fxObj?.gameDate || m.gameDate || m.date,
+      gameTime: fxObj?.gameTime || m.gameTime || m.time || "19:00",
+      realDate: fxObj?.realDate || m.realDate || m.date,
+      realTime: fxObj?.realTime || m.realTime || m.time || "19:00",
+      russiaLogo: "/assets/aistudio/russia_russia-national-team.football-logos.cc_2a5e3ddc.svg",
+      opponentLogo: teamLogo(fxObj ? (m.home !== false ? fxObj.away : fxObj.home) : m.opponent)
+    };
+  });
   const { playerProposals, opponentProposals } = getNationalProposals(brk);
   const calledExt = new Set(brk.extended || []);
   const calledFin = new Set(brk.final || []);
@@ -30534,7 +30968,9 @@ app.post("/api/admin/national/match", admin, (req, res) => {
     realTime: rTime,
     home: home !== false
   });
+  syncNationalTeamFixtures();
   save();
+  setTimeout(runAutoStartTick, 50);
   res.json({ ok: 1, team: teamType, current: enrichNationalBreak(nt.current, teamType) });
 });
 app.post("/api/admin/national/match/delete", admin, (req, res) => {
@@ -30543,6 +30979,7 @@ app.post("/api/admin/national/match/delete", admin, (req, res) => {
   const matchId = req.body.matchId || req.body.id;
   if (matchId) {
     nt.current.matches = (nt.current.matches || []).filter((m) => m.id !== matchId);
+    syncNationalTeamFixtures();
     save();
   }
   res.json({ ok: 1, team: teamType, current: enrichNationalBreak(nt.current, teamType) });
@@ -30563,6 +31000,7 @@ app.post("/api/admin/national/archive", admin, (req, res) => {
     finalReasons: {},
     matches: []
   };
+  syncNationalTeamFixtures();
   save();
   res.json({ ok: 1, team: teamType });
 });
@@ -30693,8 +31131,11 @@ app.post("/api/admin/friendlies/generate", admin, (req, res) => {
   const yCur = parseInt(String(db.settings?.season || S()).slice(0, 4), 10) || 2026;
   db.internationalBreaks = getSeasonBreaks(yCur);
   ensureSeasonFriendlies(yCur);
+  syncNationalTeamFixtures();
+  ensureApprovedFriendlyFixtures();
   invalidateAgg();
   save();
+  setTimeout(runAutoStartTick, 50);
   const natCount = (db.nationalTeam?.current?.matches || []).length;
   const natU21Count = (db.nationalTeamU21?.current?.matches || []).length;
   const clubCount = (db.fixtures || []).filter((f) => f.comp === FRIENDLY_COMP).length;
@@ -31669,7 +32110,9 @@ if (!db.settings.clearStale429ErrorsV1) {
 {
   const exp = expireFriendlies();
   const age2 = syncPlayerAges();
-  if (exp || age2) save();
+  const ntSync = syncNationalTeamFixtures();
+  const frSync = ensureApprovedFriendlyFixtures();
+  if (exp || age2 || ntSync || frSync) save();
 }
 setInterval(() => {
   try {
@@ -31685,6 +32128,13 @@ resumeLive();
 function runAutoStartTick() {
   if (!db?.settings?.auto) return;
   if (areAllProvidersAuthBlocked()) return;
+  try {
+    const chNt = syncNationalTeamFixtures();
+    const chFr = ensureApprovedFriendlyFixtures();
+    if (chNt || chFr) save();
+  } catch (e: any) {
+    console.error("auto sync nt/friendly:", e?.message);
+  }
   const now = Date.now(), lead = (db.settings.aiLeadSec !== void 0 ? +db.settings.aiLeadSec : 60) * 1e3;
   for (const f of db.fixtures || []) {
     if (f.season && f.season !== S()) continue;
@@ -31699,11 +32149,21 @@ function runAutoStartTick() {
       continue;
     }
     if (f.status !== "scheduled" || f.noAuto || !isAutoFx(f)) continue;
+    if (f.comp === FRIENDLY_COMP && f.friendlyId) {
+      const fr = (db.friendlyRequests || []).find((x) => x.id === f.friendlyId);
+      if (!fr || fr.status !== "approved" || fr.adminApproval !== "approved") continue;
+    }
     if (f.autoRetryAt && now < f.autoRetryAt) continue;
     const t = realAt(f).getTime();
     if (!Number.isFinite(t)) continue;
     if (t - lead > now) continue;
     if (now - t > AI_MAX_LATE_MS) continue;
+    if (f.comp === "national" || f.comp === "national_u21") {
+      const ntType = f.ntTeamType === "u21" || f.comp === "national_u21" ? "u21" : "main";
+      ensureRussiaNationalSquadForSim(ntType);
+      if (team(f.home)?.nationalForeign) ensureForeignNationalTeam(team(f.home).name, ntType === "u21");
+      if (team(f.away)?.nationalForeign) ensureForeignNationalTeam(team(f.away).name, ntType === "u21");
+    }
     enqueue(f.id, false, false);
   }
 }

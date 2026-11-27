@@ -463,7 +463,7 @@ export function createChannelsController(ctx: ChannelsServerContext) {
           const pairKey = `${dateStr}::${time}::${isHome ? ruName : oppName}::${isHome ? oppName : ruName}`;
           seenPairKeys.add(pairKey);
           out.push({
-            id: `nt_${tt}_${m.id}`,
+            id: m.fixtureId || `nt_${tt}_${m.id}`,
             comp: "national",
             teamType: tt,
             homeId: isHome ? (tt === "u21" ? "tm_nt_u21" : "tm_nt_main") : (oppTeam?.id || oppName),

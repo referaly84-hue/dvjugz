@@ -374,7 +374,7 @@ function stableHash(s: string): number {
 }
 
 export function processMatchFinesAndFairPlay(ctx: FinesFairPlayContext, f: any, m: any) {
-  if (!f || !m || f.comp === "friendly_match" || f.comp === "intra") return;
+  if (!f || !m || f.comp === "friendly_match" || f.comp === "intra" || f.comp === "national" || f.comp === "national_u21") return;
   const db = ctx.getDb();
   ensureFinesDb(db);
   if (db.clubFinesProcessed[f.id]) return;
@@ -489,7 +489,7 @@ export function computeFairPlayStandings(ctx: FinesFairPlayContext, compFilter?:
     (x: FairPlayAdjustment) => !x.season || x.season === curS
   );
   const doneFixtures = (db.fixtures || []).filter(
-    (f: any) => f.status === "done" && f.comp !== "friendly_match" && (!f.season || f.season === curS)
+    (f: any) => f.status === "done" && f.comp !== "friendly_match" && f.comp !== "intra" && f.comp !== "national" && f.comp !== "national_u21" && (!f.season || f.season === curS)
   );
 
   const fineMap: Record<string, { count: number; totalAmount: number; fpPenalty: number; fanCount: number }> = {};
