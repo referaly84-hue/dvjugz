@@ -5584,10 +5584,13 @@ function paintMatch() {
           : '';
       const speakerHtml = (!isFact && x.speaker) ? `<span class="ev-speaker">🎙️ ${e(x.speaker)}:</span>` : '';
       const timeLabel = x.penKickLabel ? e(x.penKickLabel) : (x.min < 0 ? 'до матча' : fmtEvT(x));
+      const personBadge = x.person ? `<div class="pl">👔 ${e(x.person)} <span class="muted small">(${x.role === 'head' ? 'гл. тренер' : 'тренерский штаб'})</span></div>` : '';
+      const benchBadge = x.benchCard ? ' <span class="tag" style="font-size:10.5px;background:#f1f5f9;color:#475569;border-color:#cbd5e1">со скамейки</span>' : '';
+      const playersLine = cls && !isFact && x.players?.length ? `<div class="pl">${e(x.players.join(', '))}${benchBadge}</div>` : (x.benchCard ? `<div class="pl">${benchBadge}</div>` : '');
       return `<div class="ev ${cls}">
         <div class="m">${timeLabel}</div>
         <div>${tLogo ? `<img class="t-logo" src="${tLogo}" alt=""/>` : (EVI[x.type] || '·')}</div>
-        <div>${typeNote}${speakerHtml}${e(x.text)}${cls && !isFact && x.players?.length ? `<div class="pl">${e(x.players.join(', '))}</div>` : ''}${scoreBadge}</div>
+        <div>${typeNote}${speakerHtml}${e(x.text)}${personBadge}${playersLine}${scoreBadge}</div>
       </div>`;
     }).join('') + '</div>';
   } else if (mtab === 'stats') {
@@ -5623,7 +5626,7 @@ function paintMatch() {
         const ratNum = getRatNum(p.id, p);
         const rat = ratNum !== null ? ratNum.toFixed(1) : '—';
         const isMotm = isMotmPid(p.id, p.n);
-        return `<tr><td class="l">${isMotm ? '⭐ ' : ''}<b>${e(p.n)}</b> <span class="muted small">${p.side === 'home' ? e(M.fixture.homeName) : e(M.fixture.awayName)}</span></td><td><span class="tag" style="font-weight:700;${ratColorTag(ratNum)}"${rEntry?.reason ? ` title="${e(rEntry.reason)}"` : ''}>${rat}</span></td><td>${p.min}</td><td>${p.g}</td><td>${p.a}</td><td>${p.sh}</td><td>${p.xg}</td><td>${p.tk}</td><td>${p.sv}</td><td>${p.ff}/${p.fa}</td><td>${p.yc}</td><td>${p.rc}</td></tr>`;
+        return `<tr><td class="l">${isMotm ? '⭐ ' : ''}<b>${e(p.n)}</b> <span class="muted small">${p.side === 'home' ? e(M.fixture.homeName) : e(M.fixture.awayName)}</span></td><td><span class="tag" style="font-weight:700;${ratColorTag(ratNum)}"${rEntry?.reason ? ` title="${e(rEntry.reason)}"` : ''}>${rat}</span></td><td>${p.min === 0 && (p.yc > 0 || p.rc > 0 || p.benchCard) ? '<span class="muted">0 (скам.)</span>' : p.min}</td><td>${p.g}</td><td>${p.a}</td><td>${p.sh}</td><td>${p.xg}</td><td>${p.tk}</td><td>${p.sv}</td><td>${p.ff}/${p.fa}</td><td>${p.yc}</td><td>${p.rc}</td></tr>`;
       }).join('')}</tbody></table></div>`;
     } else {
       const subOutMin = {};
@@ -5751,7 +5754,7 @@ function paintMatch() {
             return `<div class="m-pitch-bench-item ${mStatsSelPid === pid ? 'sel' : ''}" data-mstats-pid="${e(pid)}" style="${didPlay ? '' : 'opacity:0.65'}">
               <div style="min-width:0">
                 <div><span class="tag" style="font-size:10.5px;margin-right:4px">${e(bp.pos || pStat?.pos || 'ИГР')}</span><b>${e(bp.name)}</b></div>
-                <div class="small muted">${didPlay ? `${pStat?.min || 0}'${badges.length ? ' · ' + badges.join(' · ') : ''}` : 'Не выходил на поле'}</div>
+                <div class="small muted">${didPlay ? `${pStat?.min || 0}'${badges.length ? ' · ' + badges.join(' · ') : ''}` : (badges.length ? `На скамейке · ${badges.join(' · ')}` : 'Не выходил на поле')}</div>
               </div>
               <span class="tag" style="font-weight:800;color:#fff;border:0;background:${ratPitchBg(ratNum)}">${rat}</span>
             </div>`;
@@ -5838,6 +5841,12 @@ function paintMatch() {
       ${bar('Красные', H.rc, A.rc)}
       ${bar('Пенальти', H.penF, A.penF)}
     </div>
+    ${Array.isArray(s.staffCards) && s.staffCards.length ? `<div class="panel">
+      <h4 style="margin:0 0 8px">👔 Карточки тренерского штаба</h4>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${s.staffCards.map(sc => `<span class="tag" style="font-size:12px;${sc.type === 'red' ? 'background:#fef2f2;color:#991b1b;border-color:#fca5a5' : 'background:#fefce8;color:#854d0e;border-color:#fde047'}">${sc.type === 'red' ? '🟥' : '🟨'} <b>${e(sc.person)}</b> (${sc.role === 'head' ? 'гл. тренер' : 'штаб'}, ${e(sc.side === 'home' ? M.fixture.homeName : M.fixture.awayName)}, ${sc.min}')</span>`).join('')}
+      </div>
+    </div>` : ''}
     <div class="m-stats-bar">
       <h3 style="margin:0">Статистика игроков</h3>
       <div class="m-stats-switch">
@@ -6123,9 +6132,10 @@ function paintMatch() {
           ${logo ? `<img class="t-logo md" src="${logo}" alt=""/>` : ''}
           <h3 style="margin:0">${e(sideLineup.name)} · ${e(sideLineup.formation)}</h3>
         </div>
-        ${coachInfo ? `
+        ${(coachInfo || (Array.isArray(M.staffBans?.[s]) && M.staffBans[s].length)) ? `
         <div style="background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:12px">
-          <div><b>👔 Тренер:</b> ${e(coachInfo.name)} <span class="muted small">(${e(coachInfo.styleTitle || coachInfo.style || 'Тренер')})</span></div>
+          ${coachInfo ? `<div><b>👔 Тренер:</b> ${e(coachInfo.name)} <span class="muted small">(${e(coachInfo.styleTitle || coachInfo.style || 'Тренер')})</span></div>` : ''}
+          ${Array.isArray(M.staffBans?.[s]) && M.staffBans[s].length ? `<div class="small" style="color:#b91c1c;margin-top:${coachInfo ? '5px' : '0'}">${M.staffBans[s].map(bTxt => `🚫 ${e(bTxt)}`).join('<br>')}</div>` : ''}
         </div>` : ''}
         <h4 style="margin:0 0 6px">Стартовый состав (11)</h4>
         ${sideLineup.starters?.length ? sideLineup.starters.map(p => {
@@ -6143,7 +6153,11 @@ function paintMatch() {
           return `<div>${clientPosBadgeHtml(p, 'min-width:32px;display:inline-block;text-align:center')} ${e(p.name)}${capBadge}${slotBadge}${p.loan ? ` <span class="muted small">(из «${e(p.loan)}»)</span>` : ''}</div>`;
         }).join('') : '<div class="muted small">Стартовый состав уточняется ближе к игре.</div>'}
         <h4 style="margin-top:14px;margin-bottom:6px">Запасные</h4>
-        <div class="muted small">${sideLineup.bench?.map(p => e(p.name)).join(', ') || 'Запасные не заявлены'}</div>
+        <div class="muted small">${sideLineup.bench?.length ? sideLineup.bench.map(p => {
+          const ps = M.stats?.players?.[p.id];
+          const cardBadge = ps ? `${ps.yc > 0 ? ' 🟨'.repeat(Math.min(2, ps.yc)) : ''}${ps.rc > 0 ? ' 🟥' : ''}` : '';
+          return `${e(p.name)}${cardBadge}`;
+        }).join(', ') : 'Запасные не заявлены'}</div>
         ${(() => {
           const r = sideLineup.roles || {};
           const rNames = sideLineup.roleNames || {};
@@ -9363,6 +9377,8 @@ async function pgClub(app) {
           <button type="button" data-coach-stats="${e(x.member.id)}" title="Открыть досье и статистику" style="background:none;border:0;padding:0;margin:0;text-align:left;cursor:pointer;font-size:15px;font-weight:700;color:var(--deep);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px">${e(x.member.name)}</button>
           <span class="muted small"> ${x.member.age ? '· ' + x.member.age + ' лет' : ''}${x.member.nationality ? ' · ' + e(x.member.nationality) : ''}</span>
           ${x.member.pending ? '<span class="tag" style="background:#fef9c3;color:#854d0e;border-color:#fde047;margin-left:6px">ждёт портрета от администратора</span>' : '<span class="tag" style="background:#dcfce7;color:#166534;border-color:#bbf7d0;margin-left:6px">портрет готов</span>'}
+          ${x.member.discipline?.banLeft > 0 ? `<span class="tag" style="background:#fee2e2;color:#991b1b;border-color:#fca5a5;margin-left:6px" title="${e(x.member.discipline.reason || 'Дисквалификация')}">🟥 Дискв. (${x.member.discipline.banLeft})</span>` : ''}
+          ${x.member.discipline?.yc > 0 ? `<span class="tag" style="background:#fef9c3;color:#854d0e;border-color:#fde047;margin-left:6px">🟨 ${x.member.discipline.yc}</span>` : ''}
           ${x.member.bio ? `<div class="small muted" style="margin-top:3px">${e(x.member.bio)}</div>` : (x.member.brief ? `<div class="small muted" style="margin-top:3px">📝 ${e(x.member.brief)}</div>` : '')}
         </div>
         <button type="button" class="btn sm warn sdismiss" data-member-name="${e(x.member.name)}" data-role-title="${e(x.title)}" title="Отправить в отставку (-€100 000)">🚪 Отправить в отставку</button>

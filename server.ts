@@ -6476,6 +6476,8 @@ try {
       "team": "home" | "away" | "none",
       "type": "ОДИН ИЗ ДОПУСТИМЫХ ТИПОВ НИЖЕ",
       "players": ["Точное Имя Фамилия из состава"],
+      "person": "(опц., только для тренера/штаба при yellow|red|verbal_warning) Точное Имя Фамилия из раздела 5; при этом players: []",
+      "role": "(опц., только с person) head | staff",
       "text": "Живой репортаж на русском языке",
       "xg": число 0.01..0.95 (для shot/penalty)
     }
@@ -6506,6 +6508,7 @@ try {
 ДОПУСТИМЫЕ ЗНАЧЕНИЯ ПОЛЯ "type" (НИКАКИХ ДРУГИХ ТИПОВ НЕ ПРИДУМЫВАЙ):
 • Игровые: kickoff, possession, pass, dribble, tackle, duel, foul, yellow, red, shot, save, miss, post, goal, own_goal, penalty, offside, corner, freekick, injury, sub, var, ref_error, incident, cooling_break, kit_issue, verbal_warning, highlight, fact, tactical_note, commentator_intro, crowd, halftime, fulltime.
 • Прематч (только min -15..-1 в 1-м отрезке): commentator_intro, tactical_note, stat_display, fact, crowd, incident, lineup, walkout, anthem, coin_toss, photo, warmup, kickoff_buildup.
+• Карточки техзоне и скамейке (РЕДКО!): за споры с резервным арбитром, выход из техзоны, откидку мяча или грубые эмоции арбитр может редко показать verbal_warning / yellow (и ещё реже — 2-ю ЖК или прямую red при грубом скандале/выходе на поле) главному тренеру, сотруднику штаба ("players": [], "person": "Точное Имя", "role": "head"|"staff") или запасному на скамейке ("players": ["Точное Имя со скамейки"] без выпуска на замену). Дисквалифицированных тренеров у бровки нет — карточки им не давай.
 • Не выдумывай типы вроде prematch_lineups, throw_in, aerial, disallowed_goal — для отменённого гола используй var / offside / foul.`;
 }
 var uid = () => crypto3.randomBytes(5).toString("hex");
@@ -13549,6 +13552,7 @@ ${refInfo()}
 - ${H}: ${cInfo("home")}
 - ${A}: ${cInfo("away")}
 - \u0412\u041B\u0418\u042F\u041D\u0418\u0415 \u0422\u0420\u0415\u041D\u0415\u0420\u041E\u0412 \u0418 \u0428\u0422\u0410\u0411\u0410 \u041D\u0410 \u041C\u0410\u0422\u0427: \u0427\u0435\u043C \u0432\u044B\u0448\u0435 \u0443\u0440\u043E\u0432\u0435\u043D\u044C \u0433\u043B\u0430\u0432\u043D\u043E\u0433\u043E \u0442\u0440\u0435\u043D\u0435\u0440\u0430 \u0438 \u0442\u0440\u0435\u043D\u0435\u0440\u0441\u043A\u043E\u0433\u043E \u0448\u0442\u0430\u0431\u0430 (\u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043D\u0442, \u0444\u0438\u0437\u043F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043A\u0430, \u0442\u0440\u0435\u043D\u0435\u0440 \u0432\u0440\u0430\u0442\u0430\u0440\u0435\u0439, \u0430\u043D\u0430\u043B\u0438\u0442\u0438\u043A, \u0432\u0440\u0430\u0447\u0438), \u0442\u0435\u043C \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u0435\u043D\u043D\u0435\u0435 \u043F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043B\u0435\u043D\u0430 \u043A\u043E\u043C\u0430\u043D\u0434\u0430, \u0442\u0435\u043C \u0432\u044B\u0448\u0435 \u043A\u043E\u043C\u0430\u043D\u0434\u043D\u0430\u044F \u0441\u043A\u043E\u0440\u043E\u0441\u0442\u044C, \u043B\u0443\u0447\u0448\u0435 \u0440\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F \u043C\u043E\u043C\u0435\u043D\u0442\u043E\u0432 \u0438 \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043E\u0432, \u0430 \u0442\u0430\u043A\u0436\u0435 \u0432\u044B\u043D\u043E\u0441\u043B\u0438\u0432\u043E\u0441\u0442\u044C \u0432\u043E 2-\u043C \u0442\u0430\u0439\u043C\u0435 (\u043C\u0438\u043D\u0443\u0442\u044B 70\u201390). \u041F\u0440\u0438 \u0441\u043B\u0430\u0431\u043E\u043C \u0438\u043B\u0438 \u043D\u0435\u0434\u043E\u0443\u043A\u043E\u043C\u043F\u043B\u0435\u043A\u0442\u043E\u0432\u0430\u043D\u043D\u043E\u043C \u0448\u0442\u0430\u0431\u0435 \u043A\u043E\u043C\u0430\u043D\u0434\u0430 \u0431\u044B\u0441\u0442\u0440\u0435\u0435 \u0432\u044B\u0434\u044B\u0445\u0430\u0435\u0442\u0441\u044F \u0438 \u0434\u043E\u043F\u0443\u0441\u043A\u0430\u0435\u0442 \u043B\u044F\u043F\u044B \u0432 \u043A\u043E\u043D\u0446\u043E\u0432\u043A\u0430\u0445!
+- ПОВЕДЕНИЕ У БРОВКИ И НА СКАМЕЙКЕ: если главный тренер (особенно вспыльчивый), представитель штаба или игрок на скамейке запасных теряет контроль и ругается с резервным арбитром (${ctx.refereeCrew?.fourth || "резервный судья"}), выходит из технической зоны или срывает рестарт игры, судья изредка может показать им карточку (для тренера/штаба — "person" + "role": "head"|"staff", "players": []; для невышедшего запасного — "players": ["Точное Имя со скамейки"]). Но такие карточки — редкость!
 `;
   u += `6. \u0422\u0420\u0415\u041D\u0418\u0420\u041E\u0412\u041E\u0427\u041D\u042B\u0419 \u041F\u0420\u041E\u0426\u0415\u0421\u0421 \u0418 \u041F\u0420\u0415\u0414\u041C\u0410\u0422\u0427\u0415\u0412\u042B\u0419 \u041F\u041B\u0410\u041D:
 - \u041D\u0435\u0434\u0435\u043B\u044C\u043D\u044B\u0439 \u0446\u0438\u043A\u043B ${H}: ${tr("home")}
@@ -13939,12 +13943,20 @@ function deriveState(events, ctx, note?: any) {
       st.scorers.push(`${e.min}' ${pName ? pName + " " : ""}(${e.type === "own_goal" ? "автогол -> " : ""}${tName})`);
     }
     const nm = (i) => ctx.names[e.pids?.[i]];
-    if (e.type === "yellow" && nm(0)) st.yellows[e.team]?.push(nm(0));
-    if (e.type === "red" && nm(0)) {
-      st.reds.push(nm(0));
-      st.off.push(nm(0));
-      const sd = ctx?.pidSide?.[e.pids?.[0]] || e.team;
-      if ((sd === "home" || sd === "away") && e.pids?.[0]) onPitchIds[sd].delete(e.pids[0]);
+    if (e.type === "yellow") {
+      if (nm(0)) st.yellows[e.team]?.push(nm(0));
+      else if (e.person) st.yellows[e.team]?.push(e.person);
+    }
+    if (e.type === "red") {
+      if (nm(0)) {
+        st.reds.push(nm(0));
+        st.off.push(nm(0));
+        const sd = ctx?.pidSide?.[e.pids?.[0]] || e.team;
+        if ((sd === "home" || sd === "away") && e.pids?.[0]) onPitchIds[sd].delete(e.pids[0]);
+      } else if (e.person) {
+        st.reds.push(e.person);
+        st.off.push(e.person);
+      }
     }
     if (e.type === "sub") {
       st.subs[e.team]++;
@@ -14023,6 +14035,47 @@ function computeLiveEventDelayMs(e: any, nx: any, settings: any) {
 function buildVarPauseCommentaryBeat(cur: any, nxt: any, ctx: any, beatIdx: number, totalBeats: number, usedTexts?: Set<string>) {
   return buildRichVarBeat(cur, nxt, ctx, beatIdx, totalBeats, usedTexts);
 }
+function isStaffPersonSuspended(ctx: any, side: "home" | "away" | null, personName: string): boolean {
+  if (!side || !personName || ctx?.intraSquad) return false;
+  const compId = String(ctx?.compId || "");
+  if (compId === FRIENDLY_COMP || compId === "national" || compId === "national_u21") return false;
+  const tid = ctx?.sides?.[side]?.id;
+  if (!tid) return false;
+  const dd = (db.staffDiscipline || {})[discKey(tid, personName)];
+  if (!dd) return false;
+  const dComp = normDiscComp(ctx?.compId);
+  return (dd.banLeft || 0) > 0 || !!(dComp && (dd.byComp?.[dComp]?.banLeft || 0) > 0);
+}
+function resolveCoachOrStaff(ctx: any, rawName: string, teamHint: "home" | "away" | null): { side: "home" | "away"; name: string; role: "head" | "staff" } | null {
+  const want = norm(rawName);
+  if (!want || want === norm("Не назначен")) return null;
+  const sidesToCheck: ("home" | "away")[] = teamHint ? [teamHint] : ["home", "away"];
+  for (const tm of sidesToCheck) {
+    const cx = ctx?.coaches?.[tm];
+    if (!cx) continue;
+    const headName = String(cx.coach?.name || "").trim();
+    const staffNames = (cx.staff || []).map((x: any) => String(x?.name || "").trim()).filter(Boolean);
+    const allEntries: Array<{ name: string; role: "head" | "staff" }> = [];
+    if (headName && norm(headName) !== norm("Не назначен")) allEntries.push({ name: headName, role: "head" });
+    for (const sn of staffNames) {
+      if (norm(sn) !== norm("Не назначен") && (!headName || norm(sn) !== norm(headName))) {
+        allEntries.push({ name: sn, role: "staff" });
+      }
+    }
+    const exact = allEntries.find((x) => norm(x.name) === want);
+    if (exact) return { side: tm, ...exact };
+    if (want.length >= 4) {
+      const partial = allEntries.find((x) => norm(x.name).includes(want) || want.includes(norm(x.name)));
+      if (partial) return { side: tm, ...partial };
+      const wantLast = want.split(" ").pop() || "";
+      if (wantLast.length >= 4) {
+        const byLast = allEntries.filter((x) => (norm(x.name).split(" ").pop() || "") === wantLast);
+        if (byLast.length === 1) return { side: tm, ...byLast[0] };
+      }
+    }
+  }
+  return null;
+}
 var CRITICAL_EVENT_TYPES = /* @__PURE__ */ new Set(["goal", "own_goal", "red", "penalty", "var"]);
 function normalizeEvents(raw, a, b, ctx, prev, minEv = 3, opts?: { strictLegionSub?: boolean }) {
   if (!Array.isArray(raw) || raw.length < minEv) throw new Error("\u0441\u043B\u0438\u0448\u043A\u043E\u043C \u043C\u0430\u043B\u043E \u0441\u043E\u0431\u044B\u0442\u0438\u0439");
@@ -14079,12 +14132,16 @@ function normalizeEvents(raw, a, b, ctx, prev, minEv = 3, opts?: { strictLegionS
       continue;
     }
     const pids = [], names = [];
+    const unmatchedPlayers = [];
     for (const n of Array.isArray(e.players) ? e.players : []) {
       const pid = resolve(idx, n, ["home", "away"].includes(e.team) && !["save", "sub", "foul", "tackle", "own_goal"].includes(type) ? e.team : null);
       if (pid) {
         pids.push(pid);
         names.push(ctx.names[pid]);
-      } else if (n) unknown.add(n);
+      } else if (n) {
+        unknown.add(n);
+        unmatchedPlayers.push(n);
+      }
     }
     let team2 = ["home", "away", "none"].includes(e.team) ? e.team : null;
     if (!team2) team2 = pids[0] ? ctx.pidSide[pids[0]] : "none";
@@ -14114,33 +14171,45 @@ function normalizeEvents(raw, a, b, ctx, prev, minEv = 3, opts?: { strictLegionS
         continue;
       }
     }
+    // Resolve coach/staff cards or verbal warnings (either via e.person or fallback if AI put coach/staff in e.players; also resolve player if AI mistakenly put a bench player in e.person)
+    let cardPerson = null, cardRole = null;
+    if ((type === "yellow" || type === "red" || type === "verbal_warning") && !pids[0]) {
+      const tmHint = ["home", "away"].includes(team2) ? (team2 as "home" | "away") : null;
+      if (e.person) {
+        const asPlayerPid = resolve(idx, e.person, tmHint);
+        if (asPlayerPid) {
+          pids.push(asPlayerPid);
+          names.push(ctx.names[asPlayerPid]);
+          if (team2 === "none" && ctx.pidSide[asPlayerPid]) team2 = ctx.pidSide[asPlayerPid];
+        }
+      }
+      if (!pids[0] && (e.person || e.role || unmatchedPlayers.length > 0)) {
+        const candidateStr = String(e.person || unmatchedPlayers[0] || "").trim();
+        const staffHit = candidateStr ? resolveCoachOrStaff(ctx, candidateStr, tmHint) : null;
+        if (staffHit) {
+          cardPerson = staffHit.name;
+          cardRole = staffHit.role;
+          team2 = staffHit.side;
+          if (!e.person && unmatchedPlayers[0]) unknown.delete(unmatchedPlayers[0]);
+          if (isStaffPersonSuspended(ctx, staffHit.side, staffHit.name)) {
+            probs.push(`${staffHit.name} \u0434\u0438\u0441\u043A\u0432\u0430\u043B\u0438\u0444\u0438\u0446\u0438\u0440\u043E\u0432\u0430\u043D \u0438 \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u043D\u0430 \u0441\u043A\u0430\u043C\u0435\u0439\u043A\u0435`);
+            continue;
+          }
+        } else if (e.person || e.role) {
+          if (type === "yellow" || type === "red") {
+            probs.push(`\u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0430 \u043B\u0438\u0446\u0443 \u0432\u043D\u0435 \u0441\u043F\u0438\u0441\u043A\u0430 \u0442\u0440\u0435\u043D\u0435\u0440\u043E\u0432/\u0448\u0442\u0430\u0431\u0430: ${e.person || e.role}`);
+            continue;
+          }
+        }
+      }
+    }
     const actor = type === "sub" || type === "save" ? null : pids[0];
     if (actor && off.has(norm(ctx.names[actor])) && !["yellow", "red", "injury", "foul"].includes(type) && !NONACT_TYPES.has(type)) {
       probs.push(`${ctx.names[actor]} \u0434\u0435\u0439\u0441\u0442\u0432\u0443\u0435\u0442 \u043F\u043E\u0441\u043B\u0435 \u0443\u0445\u043E\u0434\u0430 \u0441 \u043F\u043E\u043B\u044F`);
     }
-    let cardPerson = null, cardRole = null;
-    if ((type === "yellow" || type === "red") && !pids[0] && (e.person || e.role)) {
-      const tm = ["home", "away"].includes(team2) ? team2 : null;
-      const cx = tm ? ctx.coaches?.[tm] : null;
-      const staffList = cx ? [cx.coach?.name, ...(cx.staff || []).map((x) => x.name)].filter(Boolean) : [];
-      const want = norm(e.person || "");
-      const hit = staffList.find((nm) => norm(nm) === want) || staffList.find((nm) => want && (norm(nm).includes(want) || want.includes(norm(nm))));
-      if (!hit) {
-        probs.push(`\u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0430 \u043B\u0438\u0446\u0443 \u0432\u043D\u0435 \u0441\u043F\u0438\u0441\u043A\u0430 \u0442\u0440\u0435\u043D\u0435\u0440\u043E\u0432/\u0448\u0442\u0430\u0431\u0430: ${e.person || e.role}`);
-        continue;
-      }
-      cardPerson = hit;
-      cardRole = cx?.coach?.name === hit ? "head" : "staff";
-      const tid = tm ? ctx.sides?.[tm]?.id : null;
-      const dd = tid ? (db.staffDiscipline || {})[discKey(tid, hit)] : null;
-      const dComp = normDiscComp(ctx.compId);
-      if (dd && ((dd.banLeft || 0) > 0 || (dComp && (dd.byComp?.[dComp]?.banLeft || 0) > 0))) {
-        probs.push(`${hit} \u0434\u0438\u0441\u043A\u0432\u0430\u043B\u0438\u0444\u0438\u0446\u0438\u0440\u043E\u0432\u0430\u043D \u0438 \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u043D\u0430 \u0441\u043A\u0430\u043C\u0435\u0439\u043A\u0435`);
-        continue;
-      }
-    }
     const outDays = type === "injury" ? e.out_days !== void 0 ? isNaN(+e.out_days) ? 14 : clamp(Math.round(+e.out_days), 0, 240) : 14 : void 0;
     if (type === "red" && pids[0]) off.add(norm(ctx.names[pids[0]]));
+    if (type === "red" && cardPerson) off.add(norm(cardPerson));
     if (type === "injury" && pids[0] && (outDays === void 0 || outDays > 0)) off.add(norm(ctx.names[pids[0]]));
     if (type === "sub") {
       if (["home", "away"].includes(team2)) {
@@ -14173,166 +14242,217 @@ function normalizeEvents(raw, a, b, ctx, prev, minEv = 3, opts?: { strictLegionS
     out.push(ev);
   }
   out = out.map((e, i) => ({ e, i })).sort((x, y) => x.e.min * 60 + x.e.sec - (y.e.min * 60 + y.e.sec) || x.i - y.i).map((x) => x.e);
-  // Enforce on-pitch legionnaire limit across all substitutions in RPL/Cup matches
+  // Enforce on-pitch state, forbid subbing in already red-carded/injured players, enforce legionnaire limits, and tag bench cards
   {
     const limBySide: Record<"home" | "away", number | null> = {
       home: ctx?.legionLimitBySide?.home ?? ((ctx?.compId === "rpl" || ctx?.compId === "fnl") && !ctx?.intraSquad ? getRplLegionLimit(S()).onPitch : null),
       away: ctx?.legionLimitBySide?.away ?? ((ctx?.compId === "rpl" || ctx?.compId === "fnl") && !ctx?.intraSquad ? getRplLegionLimit(S()).onPitch : null)
     };
-    if (limBySide.home != null || limBySide.away != null) {
-      const pitchBySide: Record<"home" | "away", Set<string>> = {
-        home: new Set<string>(ctx?.lineup?.home?.starters || []),
-        away: new Set<string>(ctx?.lineup?.away?.starters || [])
-      };
-      const subbedInSoFar = new Set<string>();
-      const offPitchSoFar = new Set<string>();
-      for (const pe of (prev || [])) {
-        if (!pe) continue;
-        if (pe.type === "red" && pe.pids?.[0]) {
-          const sd = ctx?.pidSide?.[pe.pids[0]] || pe.team;
-          if (sd === "home" || sd === "away") pitchBySide[sd].delete(pe.pids[0]);
-          offPitchSoFar.add(pe.pids[0]);
-        } else if (pe.type === "injury" && pe.pids?.[0] && (pe.out_days === void 0 || pe.out_days > 0)) {
-          const sd = ctx?.pidSide?.[pe.pids[0]] || pe.team;
-          if (sd === "home" || sd === "away") pitchBySide[sd].delete(pe.pids[0]);
-          offPitchSoFar.add(pe.pids[0]);
-        } else if (pe.type === "sub") {
-          const sd = (pe.team === "home" || pe.team === "away") ? pe.team : (ctx?.pidSide?.[pe.pids?.[0]] || ctx?.pidSide?.[pe.pids?.[1]]);
-          if (sd === "home" || sd === "away") {
-            let inP = pe.pids?.[0], outP = pe.pids?.[1];
-            if (inP && outP && pitchBySide[sd].has(inP) && !pitchBySide[sd].has(outP)) {
-              [inP, outP] = [outP, inP];
-            }
-            if (outP) { pitchBySide[sd].delete(outP); offPitchSoFar.add(outP); }
-            if (inP) { pitchBySide[sd].add(inP); subbedInSoFar.add(inP); }
-          }
-        }
-      }
-      const cancelledSubIndices = new Set<number>();
-      const droppedSubbedInPids = new Set<string>();
-      const criticalAfterIdx = (fromIdx: number, pid: string) => {
-        for (let k = fromIdx + 1; k < out.length; k++) {
-          const evk = out[k];
-          if (["goal", "own_goal", "red", "yellow", "penalty"].includes(evk.type) && Array.isArray(evk.pids) && evk.pids.includes(pid)) {
-            return true;
-          }
-        }
-        return false;
-      };
-      for (let idx = 0; idx < out.length; idx++) {
-        const cur = out[idx];
-        if (!cur || cancelledSubIndices.has(idx) || cur._legionChecked) continue;
-        if (cur.type === "red" && cur.pids?.[0]) {
-          const sd = ctx?.pidSide?.[cur.pids[0]] || cur.team;
-          if (sd === "home" || sd === "away") pitchBySide[sd].delete(cur.pids[0]);
-          offPitchSoFar.add(cur.pids[0]);
-          continue;
-        }
-        if (cur.type === "injury" && cur.pids?.[0] && (cur.out_days === void 0 || cur.out_days > 0)) {
-          const sd = ctx?.pidSide?.[cur.pids[0]] || cur.team;
-          if (sd === "home" || sd === "away") pitchBySide[sd].delete(cur.pids[0]);
-          offPitchSoFar.add(cur.pids[0]);
-          continue;
-        }
-        if (cur.type !== "sub") continue;
-        const sd = (cur.team === "home" || cur.team === "away") ? cur.team : (ctx?.pidSide?.[cur.pids?.[0]] || ctx?.pidSide?.[cur.pids?.[1]]);
-        if (sd !== "home" && sd !== "away") continue;
-        const sideLim = limBySide[sd];
-        if (sideLim == null) {
-          let inP = cur.pids?.[0], outP = cur.pids?.[1];
+    const pitchBySide: Record<"home" | "away", Set<string>> = {
+      home: new Set<string>(ctx?.lineup?.home?.starters || []),
+      away: new Set<string>(ctx?.lineup?.away?.starters || [])
+    };
+    const benchSetBySide: Record<"home" | "away", Set<string>> = {
+      home: new Set<string>(ctx?.lineup?.home?.bench || []),
+      away: new Set<string>(ctx?.lineup?.away?.bench || [])
+    };
+    const subbedInSoFar = new Set<string>();
+    const offPitchSoFar = new Set<string>();
+    for (const pe of (prev || [])) {
+      if (!pe) continue;
+      if (pe.type === "red" && pe.pids?.[0]) {
+        const sd = ctx?.pidSide?.[pe.pids[0]] || pe.team;
+        if (sd === "home" || sd === "away") pitchBySide[sd].delete(pe.pids[0]);
+        offPitchSoFar.add(pe.pids[0]);
+      } else if (pe.type === "injury" && pe.pids?.[0] && (pe.out_days === void 0 || pe.out_days > 0)) {
+        const sd = ctx?.pidSide?.[pe.pids[0]] || pe.team;
+        if (sd === "home" || sd === "away") pitchBySide[sd].delete(pe.pids[0]);
+        offPitchSoFar.add(pe.pids[0]);
+      } else if (pe.type === "sub") {
+        const sd = (pe.team === "home" || pe.team === "away") ? pe.team : (ctx?.pidSide?.[pe.pids?.[0]] || ctx?.pidSide?.[pe.pids?.[1]]);
+        if (sd === "home" || sd === "away") {
+          let inP = pe.pids?.[0], outP = pe.pids?.[1];
           if (inP && outP && pitchBySide[sd].has(inP) && !pitchBySide[sd].has(outP)) {
             [inP, outP] = [outP, inP];
-            cur.pids = [inP, outP];
-            cur.players = [ctx.names?.[inP], ctx.names?.[outP]].filter(Boolean);
           }
           if (outP) { pitchBySide[sd].delete(outP); offPitchSoFar.add(outP); }
           if (inP) { pitchBySide[sd].add(inP); subbedInSoFar.add(inP); }
-          continue;
         }
-        // Gather all sub events for this side at the same minute so simultaneous swaps evaluate together
-        const groupIdxs: number[] = [idx];
-        for (let k = idx + 1; k < out.length; k++) {
-          const ek = out[k];
-          if (ek.min !== cur.min) break;
-          if (ek.type === "red" || (ek.type === "injury" && (ek.out_days === void 0 || ek.out_days > 0))) {
-            const sk = (ek.team === "home" || ek.team === "away") ? ek.team : (ctx?.pidSide?.[ek.pids?.[0]]);
-            if (sk === sd) break;
-          }
-          if (ek.type === "sub") {
-            const sk = (ek.team === "home" || ek.team === "away") ? ek.team : (ctx?.pidSide?.[ek.pids?.[0]] || ctx?.pidSide?.[ek.pids?.[1]]);
-            if (sk === sd) groupIdxs.push(k);
-          }
-        }
-        if (groupIdxs.length > 1 && idx !== groupIdxs[0]) continue; // already processed with group
-        // Normalize swapped [out, in] and sort -1 (leg out) before +1 (leg in)
-        const groupItems = groupIdxs.map((gi) => {
-          const evg = out[gi];
-          let inP = evg.pids?.[0], outP = evg.pids?.[1];
-          if (inP && outP && pitchBySide[sd].has(inP) && !pitchBySide[sd].has(outP)) {
-            [inP, outP] = [outP, inP];
-            evg.pids = [inP, outP];
-            evg.players = [ctx.names?.[inP], ctx.names?.[outP]].filter(Boolean);
-          }
-          const delta = (inP && isCtxPidLegionnaire(ctx, inP) ? 1 : 0) - (outP && isCtxPidLegionnaire(ctx, outP) ? 1 : 0);
-          return { gi, evg, inP, outP, delta };
-        }).sort((x, y) => x.delta - y.delta || x.gi - y.gi);
-
-        for (const item of groupItems) {
-          const curLeg = [...pitchBySide[sd]].filter((pid) => isCtxPidLegionnaire(ctx, pid)).length;
-          const nextLeg = curLeg + item.delta;
-          if (nextLeg > sideLim) {
-            const tName = ctx?.sides?.[sd]?.name || (sd === "home" ? "Хозяева" : "Гости");
-            const inNm = (item.inP && ctx?.names?.[item.inP]) || item.evg.players?.[0] || "легионер";
-            const outNm = (item.outP && ctx?.names?.[item.outP]) || item.evg.players?.[1] || "игрок";
-            if (opts?.strictLegionSub || (item.inP && criticalAfterIdx(item.gi, item.inP))) {
-              fatalProbs.push(`превышен лимит легионеров на поле у «${tName}» после замены на ${item.evg.min}' (${inNm} вместо ${outNm}): ${nextLeg}/${sideLim}`);
-            } else {
-              cancelledSubIndices.add(item.gi);
-              if (item.inP) droppedSubbedInPids.add(item.inP);
-            }
-          } else {
-            if (item.outP) { pitchBySide[sd].delete(item.outP); offPitchSoFar.add(item.outP); }
-            if (item.inP) { pitchBySide[sd].add(item.inP); subbedInSoFar.add(item.inP); }
-          }
-        }
-        // Skip ahead past processed group (other non-sub events in same minute still processed below; handled by groupIdxs skip on sub)
-        for (const gi of groupIdxs) {
-          if (gi !== idx) out[gi]._legionChecked = true;
-        }
-      }
-      for (const e of out) delete e._legionChecked;
-      if (cancelledSubIndices.size > 0) {
-        out = out.filter((ev, gi) => {
-          if (cancelledSubIndices.has(gi)) return false;
-          if (droppedSubbedInPids.size > 0 && Array.isArray(ev.pids) && ev.pids.some((pid: string) => droppedSubbedInPids.has(pid))) {
-            return false;
-          }
-          return true;
-        });
       }
     }
+    const cancelledSubIndices = new Set<number>();
+    const droppedSubbedInPids = new Set<string>();
+    const criticalAfterIdx = (fromIdx: number, pid: string) => {
+      for (let k = fromIdx + 1; k < out.length; k++) {
+        const evk = out[k];
+        if (["goal", "own_goal", "red", "yellow", "penalty"].includes(evk.type) && Array.isArray(evk.pids) && evk.pids.includes(pid)) {
+          return true;
+        }
+      }
+      return false;
+    };
+    for (let idx2 = 0; idx2 < out.length; idx2++) {
+      const cur = out[idx2];
+      if (!cur || cancelledSubIndices.has(idx2) || cur._legionChecked) continue;
+      if ((cur.type === "yellow" || cur.type === "red" || cur.type === "verbal_warning") && cur.pids?.[0] && !cur.person) {
+        const sd = (cur.team === "home" || cur.team === "away") ? cur.team : ctx?.pidSide?.[cur.pids[0]];
+        if ((sd === "home" || sd === "away") && !pitchBySide[sd].has(cur.pids[0]) && benchSetBySide[sd].has(cur.pids[0]) && !subbedInSoFar.has(cur.pids[0])) {
+          cur.benchCard = true;
+        }
+      }
+      if (cur.type === "red" && cur.pids?.[0]) {
+        const sd = ctx?.pidSide?.[cur.pids[0]] || cur.team;
+        if (sd === "home" || sd === "away") pitchBySide[sd].delete(cur.pids[0]);
+        offPitchSoFar.add(cur.pids[0]);
+        continue;
+      }
+      if (cur.type === "injury" && cur.pids?.[0] && (cur.out_days === void 0 || cur.out_days > 0)) {
+        const sd = ctx?.pidSide?.[cur.pids[0]] || cur.team;
+        if (sd === "home" || sd === "away") pitchBySide[sd].delete(cur.pids[0]);
+        offPitchSoFar.add(cur.pids[0]);
+        continue;
+      }
+      if (cur.type !== "sub") continue;
+      const sd = (cur.team === "home" || cur.team === "away") ? cur.team : (ctx?.pidSide?.[cur.pids?.[0]] || ctx?.pidSide?.[cur.pids?.[1]]);
+      if (sd !== "home" && sd !== "away") continue;
+      const sideLim = limBySide[sd];
+      if (sideLim == null) {
+        let inP = cur.pids?.[0], outP = cur.pids?.[1];
+        if (inP && outP && pitchBySide[sd].has(inP) && !pitchBySide[sd].has(outP)) {
+          [inP, outP] = [outP, inP];
+          cur.pids = [inP, outP];
+          cur.players = [ctx.names?.[inP], ctx.names?.[outP]].filter(Boolean);
+        }
+        if (inP && (offPitchSoFar.has(inP) || subbedInSoFar.has(inP))) {
+          cancelledSubIndices.add(idx2);
+          continue;
+        }
+        if (outP) { pitchBySide[sd].delete(outP); offPitchSoFar.add(outP); }
+        if (inP) { pitchBySide[sd].add(inP); subbedInSoFar.add(inP); }
+        continue;
+      }
+      const groupIdxs: number[] = [idx2];
+      for (let k = idx2 + 1; k < out.length; k++) {
+        const ek = out[k];
+        if (ek.min !== cur.min) break;
+        if (ek.type === "red" || (ek.type === "injury" && (ek.out_days === void 0 || ek.out_days > 0))) {
+          const sk = (ek.team === "home" || ek.team === "away") ? ek.team : (ctx?.pidSide?.[ek.pids?.[0]]);
+          if (sk === sd) break;
+        }
+        if (ek.type === "sub") {
+          const sk = (ek.team === "home" || ek.team === "away") ? ek.team : (ctx?.pidSide?.[ek.pids?.[0]] || ctx?.pidSide?.[ek.pids?.[1]]);
+          if (sk === sd) groupIdxs.push(k);
+        }
+      }
+      if (groupIdxs.length > 1 && idx2 !== groupIdxs[0]) continue;
+      const groupItems = groupIdxs.map((gi) => {
+        const evg = out[gi];
+        let inP = evg.pids?.[0], outP = evg.pids?.[1];
+        if (inP && outP && pitchBySide[sd].has(inP) && !pitchBySide[sd].has(outP)) {
+          [inP, outP] = [outP, inP];
+          evg.pids = [inP, outP];
+          evg.players = [ctx.names?.[inP], ctx.names?.[outP]].filter(Boolean);
+        }
+        const delta = (inP && isCtxPidLegionnaire(ctx, inP) ? 1 : 0) - (outP && isCtxPidLegionnaire(ctx, outP) ? 1 : 0);
+        return { gi, evg, inP, outP, delta };
+      }).sort((x, y) => x.delta - y.delta || x.gi - y.gi);
+
+      for (const item of groupItems) {
+        if (item.inP && (offPitchSoFar.has(item.inP) || subbedInSoFar.has(item.inP))) {
+          cancelledSubIndices.add(item.gi);
+          continue;
+        }
+        const curLeg = [...pitchBySide[sd]].filter((pid) => isCtxPidLegionnaire(ctx, pid)).length;
+        const nextLeg = curLeg + item.delta;
+        if (nextLeg > sideLim) {
+          const tName = ctx?.sides?.[sd]?.name || (sd === "home" ? "Хозяева" : "Гости");
+          const inNm = (item.inP && ctx?.names?.[item.inP]) || item.evg.players?.[0] || "легионер";
+          const outNm = (item.outP && ctx?.names?.[item.outP]) || item.evg.players?.[1] || "игрок";
+          if (opts?.strictLegionSub || (item.inP && criticalAfterIdx(item.gi, item.inP))) {
+            fatalProbs.push(`превышен лимит легионеров на поле у «${tName}» после замены на ${item.evg.min}' (${inNm} вместо ${outNm}): ${nextLeg}/${sideLim}`);
+          } else {
+            cancelledSubIndices.add(item.gi);
+            if (item.inP) droppedSubbedInPids.add(item.inP);
+          }
+        } else {
+          if (item.outP) { pitchBySide[sd].delete(item.outP); offPitchSoFar.add(item.outP); }
+          if (item.inP) { pitchBySide[sd].add(item.inP); subbedInSoFar.add(item.inP); }
+        }
+      }
+      for (const gi of groupIdxs) {
+        if (gi !== idx2) out[gi]._legionChecked = true;
+      }
+    }
+    for (const e of out) delete e._legionChecked;
+    if (cancelledSubIndices.size > 0) {
+      out = out.filter((ev, gi) => {
+        if (cancelledSubIndices.has(gi)) return false;
+        if (droppedSubbedInPids.size > 0 && Array.isArray(ev.pids) && ev.pids.some((pid: string) => droppedSubbedInPids.has(pid))) {
+          return false;
+        }
+        return true;
+      });
+    }
   }
-  // Discipline realism guard: deduplicate repeat reds on same actor and prevent multiple spurious straight reds in a single half
+  // Discipline realism guard: track both players and coach/staff/bench actors, enforce 2nd-yellow -> red, and prevent spurious straight reds
   if (minEv > 0) {
     const alreadyRedNames = new Set((st.reds || []).map((x) => norm(x)));
     const ycNamesSoFar = new Set([...(st.yellows?.home || []), ...(st.yellows?.away || [])].map((x) => norm(x)));
     let straightRedsInSlice = 0;
+    const extraSecondYellowReds: Array<{ afterIdx: number; ev: any }> = [];
     for (let i = 0; i < out.length; i++) {
       const cur = out[i];
-      if (cur.type === "yellow" && cur.players?.[0]) {
-        ycNamesSoFar.add(norm(cur.players[0]));
+      const actorDisplay = cur.person || cur.players?.[0] || "";
+      const actorKey = actorDisplay ? norm(actorDisplay) : "";
+      if (cur.type === "yellow") {
+        if (!actorKey) continue;
+        if (alreadyRedNames.has(actorKey)) {
+          cur.type = "incident";
+          continue;
+        }
+        if (ycNamesSoFar.has(actorKey)) {
+          // 2nd yellow: ensure a matching red follows nearby; if AI forgot the red event, synthesize it cleanly
+          const tCur = cur.min * 60 + (cur.sec || 0);
+          const hasFollowingRed = out.slice(i + 1).some((nx) => {
+            if (nx.type !== "red") return false;
+            const nxKey = norm(nx.person || nx.players?.[0] || "");
+            return nxKey === actorKey && (nx.min * 60 + (nx.sec || 0) - tCur) <= 120;
+          });
+          if (!hasFollowingRed) {
+            const redEv: any = {
+              min: cur.min,
+              sec: Math.min(59, (cur.sec || 0) + 3),
+              team: cur.team,
+              type: "red",
+              players: cur.person ? [] : [...(cur.players || [])],
+              pids: [...(cur.pids || [])],
+              ban_matches: 1,
+              text: `Вторая жёлтая карточка — удаление! ${actorDisplay} отправляется в раздевалку.`
+            };
+            if (cur.person) {
+              redEv.person = cur.person;
+              redEv.role = cur.role;
+            }
+            if (cur.benchCard) redEv.benchCard = true;
+            extraSecondYellowReds.push({ afterIdx: i, ev: redEv });
+            alreadyRedNames.add(actorKey);
+          }
+        } else {
+          ycNamesSoFar.add(actorKey);
+        }
         continue;
       }
       if (cur.type !== "red") continue;
-      const actorKey = cur.person ? norm(cur.person) : (cur.players?.[0] ? norm(cur.players[0]) : "");
       if (actorKey && alreadyRedNames.has(actorKey)) {
         cur.type = "incident";
         continue;
       }
       const isSecondYellow = !!(actorKey && ycNamesSoFar.has(actorKey)) || /втор(?:ая|ую|ой)\s+ж[её]лт/i.test(cur.text || "");
       const isExtremeBrawl = /драк|удар\s+в\s+лиц|плевок|нападен/i.test(cur.text || "");
+      const isSeriousStaffMisconduct = !!(cur.person && /оскорбл|мат(?:ом|а)|нецензур|брос[а-яё]*\s+(?:бутылк|манишк|предмет)|выбеж|вышел\s+на\s+поле|выскоч[а-яё]*\s+на\s+поле|оттолкнул|агрессив[а-яё]*\s+.*судь/i.test(cur.text || ""));
       if (!isSecondYellow && !isExtremeBrawl) {
-        if (straightRedsInSlice >= 1 || (cur.person && !ctx?.isDerby)) {
+        const allowCoachStraightRed = !!(cur.person && (ctx?.isDerby || ctx?.isFinal || ctx?.isRivalry || isSeriousStaffMisconduct));
+        if (straightRedsInSlice >= 1 || (cur.person && !allowCoachStraightRed)) {
           cur.type = "yellow";
           delete cur.ban_matches;
           delete cur.ban_days;
@@ -14344,6 +14464,12 @@ function normalizeEvents(raw, a, b, ctx, prev, minEv = 3, opts?: { strictLegionS
         straightRedsInSlice++;
       }
       if (actorKey) alreadyRedNames.add(actorKey);
+    }
+    if (extraSecondYellowReds.length > 0) {
+      for (let k = extraSecondYellowReds.length - 1; k >= 0; k--) {
+        const item = extraSecondYellowReds[k];
+        out.splice(item.afterIdx + 1, 0, item.ev);
+      }
     }
   }
   // Neutralize any goal/own_goal event that is subsequently cancelled by VAR/offside/ref_error within 4 minutes
@@ -14512,8 +14638,42 @@ function fakePeriod(a, b, ctx, prev) {
   const discProf = ctx?.disciplinaryProfile || buildDisciplinaryProfile(ctx, !!ctx?.isDerby, !!ctx?.isRivalry, !!ctx?.isFinal);
   const factPool: string[] = Array.isArray(ctx?.broadcastFacts) ? [...ctx.broadcastFacts] : [];
   let factIdx = a > 1 ? Math.min(2, factPool.length) : 0;
+  const spanFrac = clamp((b - a + 1) / 45, 0.2, 1.6);
+  const touchlineCardRoll = R();
+  const touchlineWarnRoll = R();
+  const touchlineCardProb = clamp((discProf.staffBenchCardProb || 0.03) * spanFrac, 0.008, 0.14);
+  const touchlineWarnProb = clamp(touchlineCardProb * 1.5, 0.02, 0.18);
+  const touchlineCardMin = b - a >= 10 ? Math.min(b - 1, Math.max(a + 6, Math.floor(a + (b - a) * (0.35 + R() * 0.58)))) : Math.floor((a + b) / 2);
+  const touchlineWarnMin = b - a >= 8 ? Math.min(b - 1, Math.max(a + 4, Math.floor(a + (b - a) * (0.2 + R() * 0.65)))) : a;
+  let touchlineCardDone = false;
+  let touchlineWarnDone = false;
+  let touchlineCardTried = false;
+  let touchlineWarnTried = false;
 
   const onP = (s) => [...onPitch[s]].filter((p) => !off.has(ctx.names[p]));
+  const eligibleTechZone = (side: "home" | "away") => {
+    const cx = ctx?.coaches?.[side];
+    if (!cx) return [] as Array<{ name: string; role: "head" | "staff"; roleTitle: string; hot: boolean }>;
+    const outList: Array<{ name: string; role: "head" | "staff"; roleTitle: string; hot: boolean }> = [];
+    const headName = String(cx.coach?.name || "").trim();
+    const hotHead = /вспыльч|взрывн|эмоцион|буйн/i.test(String(cx.coach?.temperament || ""));
+    if (headName && norm(headName) !== norm("Не назначен") && !rcSet.has(headName) && !isStaffPersonSuspended(ctx, side, headName)) {
+      outList.push({ name: headName, role: "head", roleTitle: "главный тренер", hot: hotHead });
+    }
+    for (const sm of (cx.staff || [])) {
+      const sn = String(sm?.name || "").trim();
+      if (!sn || norm(sn) === norm("Не назначен") || (headName && norm(sn) === norm(headName))) continue;
+      if (rcSet.has(sn) || isStaffPersonSuspended(ctx, side, sn)) continue;
+      outList.push({ name: sn, role: "staff", roleTitle: sm.roleTitle || "тренерский штаб", hot: false });
+    }
+    return outList;
+  };
+  const eligibleBench = (side: "home" | "away") => {
+    return (ctx?.lineup?.[side]?.bench || []).filter((pid: string) => {
+      const nm = ctx?.names?.[pid] || "";
+      return pid && nm && !onPitch[side].has(pid) && !subbedIn.has(pid) && !off.has(nm) && !rcSet.has(nm);
+    });
+  };
   const push = (min, sec, team2, type, pl, text, x?: any) => {
     const o: any = { min, sec, team: team2, type, players: pl.map((p) => ctx.names[p]), pids: pl, text, ...x };
     if (booth?.duo && !o.speaker && ["fact", "tactical_note", "commentator_intro"].includes(type)) {
@@ -14537,7 +14697,8 @@ function fakePeriod(a, b, ctx, prev) {
       const sideLimit = ctx?.legionLimitBySide?.[sideKey] ?? ctx?.legionLimit?.onPitch ?? ((ctx?.compId === "rpl" || ctx?.compId === "fnl") && !ctx?.intraSquad ? getRplLegionLimit(S()).onPitch : null);
       const isLegPid = (pid: string) => isCtxPidLegionnaire(ctx, pid);
       const eligible = pSubs.filter((ps: any) => {
-        if (!onPitch[sideKey].has(ps.outPid) || subbedIn.has(ps.inPid)) return false;
+        const inNm = ctx.names?.[ps.inPid] || "";
+        if (!onPitch[sideKey].has(ps.outPid) || subbedIn.has(ps.inPid) || (inNm && (off.has(inNm) || rcSet.has(inNm)))) return false;
         const myG = sideKey === "home" ? score[0] : score[1];
         const opG = sideKey === "home" ? score[1] : score[0];
         const cond = ps.condition || "always";
@@ -14750,6 +14911,90 @@ function fakePeriod(a, b, ctx, prev) {
         }
       }
     }
+    if (!touchlineWarnTried && !touchlineWarnDone && !touchlineCardDone && m >= touchlineWarnMin) {
+      touchlineWarnTried = true;
+      if (R() < touchlineWarnProb) {
+        const sideT: "home" | "away" = R() < 0.5 ? "home" : "away";
+        const tzPool = eligibleTechZone(sideT);
+        const bpPool = eligibleBench(sideT);
+        if (tzPool.length && R() < 0.78) {
+          touchlineWarnDone = true;
+          const hotTz = tzPool.filter((x) => x.hot);
+          const tz = (hotTz.length && R() < 0.65) ? pick(hotTz) : pick(tzPool);
+          const fourth = ctx.refereeCrew?.fourth || "резервный арбитр";
+          const refN = ctx.refereeCrew?.head?.name || "главный арбитр";
+          const lines = [
+            `Эмоции у бровки: ${tz.name} (${tz.roleTitle} ${ctx.sides[sideT].name}) бурно оспаривает решение судейской бригады — ${fourth} вызывает ${refN}, и тот ограничивается строгим устным внушением.`,
+            `${tz.name} (${ctx.sides[sideT].name}) выходит за границы технической зоны на эмоциях, но ${fourth} быстро остужает пыл специалиста устным предупреждением.`
+          ];
+          push(m, 52, sideT, "verbal_warning", [], pick(lines), { person: tz.name, role: tz.role });
+        } else if (bpPool.length) {
+          touchlineWarnDone = true;
+          const bpId = pick(bpPool);
+          const bpName = ctx.names[bpId];
+          const fourth = ctx.refereeCrew?.fourth || "резервный арбитр";
+          push(m, 52, sideT, "verbal_warning", [bpId], `На скамейке запасных ${ctx.sides[sideT].name} слишком эмоционально реагирует ${bpName} — ${fourth} просит игрока успокоиться и вернуться на место.`, { benchCard: true });
+        }
+      }
+    }
+    if (!touchlineCardTried && !touchlineCardDone && m >= touchlineCardMin) {
+      touchlineCardTried = true;
+      if (R() < touchlineCardProb) {
+        const sideT: "home" | "away" = R() < 0.5 ? "home" : "away";
+        const tzPool = eligibleTechZone(sideT);
+        const bpPool = eligibleBench(sideT);
+        if (tzPool.length && (R() < 0.78 || !bpPool.length)) {
+          touchlineCardDone = true;
+          const hotTz = tzPool.filter((x) => x.hot);
+          const tz = (hotTz.length && R() < 0.68) ? pick(hotTz) : pick(tzPool);
+          const fourth = ctx.refereeCrew?.fourth || "резервный арбитр";
+          const refN = ctx.refereeCrew?.head?.name || "арбитр";
+          const isRareDirectRed = R() < 0.08 && rcSet.size === 0 && (discProf.tier === "intense" || !!ctx?.isDerby || !!ctx?.isFinal || !!ctx?.isRivalry);
+          if (isRareDirectRed) {
+            rcSet.add(tz.name);
+            off.add(tz.name);
+            push(m, 54, sideT, "red", [], `СКАНДАЛ У БРОВКИ! ${tz.name} (${tz.roleTitle} ${ctx.sides[sideT].name}) вступает в жёсткую перепалку с ${fourth} после свистка — ${refN} достаёт ПРЯМУЮ КРАСНУЮ карточку и удаляет специалиста из технической зоны!`, { person: tz.name, role: tz.role });
+          } else if (ycSet.has(tz.name)) {
+            rcSet.add(tz.name);
+            off.add(tz.name);
+            push(m, 54, sideT, "yellow", [], `Вторая жёлтая карточка у бровки! ${tz.name} (${tz.roleTitle} ${ctx.sides[sideT].name}) вновь не сдерживает эмоции в споре с ${fourth}.`, { person: tz.name, role: tz.role });
+            push(m, 57, sideT, "red", [], `Удаление в технической зоне! ${tz.name} после второй жёлтой покидает скамейку ${ctx.sides[sideT].name} и досмотрит концовку с трибуны.`, { person: tz.name, role: tz.role });
+          } else {
+            ycSet.add(tz.name);
+            const ycLines = [
+              `Жёлтая карточка ${tz.name} (${tz.roleTitle} ${ctx.sides[sideT].name})! После громких споров с ${fourth} ${refN} подходит к бровке и наказывает представителя штаба.`,
+              `${tz.name} (${tz.roleTitle} ${ctx.sides[sideT].name}) покидает пределы технической зоны и бурно жестикулирует в адрес судей — арбитр показывает ему жёлтую карточку.`,
+              `Предупреждение для тренерского штаба ${ctx.sides[sideT].name}: ${tz.name} получает жёлтую карточку за эмоциональные претензии к ${fourth}.`
+            ];
+            push(m, 54, sideT, "yellow", [], pick(ycLines), { person: tz.name, role: tz.role });
+          }
+        } else if (bpPool.length) {
+          touchlineCardDone = true;
+          const bpId = pick(bpPool);
+          const bpName = ctx.names[bpId];
+          const fourth = ctx.refereeCrew?.fourth || "резервный арбитр";
+          const refN = ctx.refereeCrew?.head?.name || "арбитр";
+          const isRareDirectRed = R() < 0.06 && rcSet.size === 0 && (discProf.tier === "intense" || !!ctx?.isDerby || !!ctx?.isFinal || !!ctx?.isRivalry);
+          if (isRareDirectRed) {
+            rcSet.add(bpName);
+            off.add(bpName);
+            push(m, 54, sideT, "red", [bpId], `УДАЛЕНИЕ СО СКАМЕЙКИ! Запасной ${bpName} (${ctx.sides[sideT].name}) оскорбляет судейскую бригаду на бровке после сигнала ${fourth} — ${refN} показывает прямую красную карточку!`, { benchCard: true });
+          } else if (ycSet.has(bpName)) {
+            rcSet.add(bpName);
+            off.add(bpName);
+            push(m, 54, sideT, "yellow", [bpId], `Вторая жёлтая карточка на скамейке запасных! ${bpName} (${ctx.sides[sideT].name}) снова вмешивается в эпизод у бровки.`, { benchCard: true });
+            push(m, 57, sideT, "red", [bpId], `Удаление запасного! ${bpName} после второй жёлтой покидает скамейку ${ctx.sides[sideT].name} и уже не сможет выйти на поле.`, { benchCard: true });
+          } else {
+            ycSet.add(bpName);
+            const bLines = [
+              `Жёлтая карточка запасному игроку! ${bpName} (${ctx.sides[sideT].name}) выбежал к самой бровке, пытаясь задержать ввод мяча, — ${fourth} подсказал арбитру.`,
+              `Карточка на скамейке запасных ${ctx.sides[sideT].name}: ${bpName} слишком бурно спорит с ${fourth} и получает предупреждение.`
+            ];
+            push(m, 54, sideT, "yellow", [bpId], pick(bLines), { benchCard: true });
+          }
+        }
+      }
+    }
   }
   const lastEvMin = ev.length ? ev[ev.length - 1].min : b;
   if (b === 45) push(Math.max(45, lastEvMin), 59, "none", "halftime", [], `Свисток на перерыв — ${score[0]}:${score[1]}.`);
@@ -14831,7 +15076,7 @@ var LIGHT_SYS_ADD = `
 
 ═══ РЕЖИМ СВОДКИ МАТЧА (ПЕРЕОПРЕДЕЛЯЕТ РАЗДЕЛ 2 ПРОМТА ПРО SHOT->GOAL И РАЗДЕЛ 11) ═══
 Это матч нижней лиги или медиалиги: поминутная хроника, прематч (раздел 0) и послематчевые реплики не нужны. Учитывай ВСЕ входные данные (профили, стиль и форму игроков, место в таблице, тренеров, схемы, погоду, газон, мотивацию, целевой сценарий матча), но верни только итог одним JSON: {"events":[...],"stats":{...},"energy_spent":{...},"referee_eval":{"rating":число_5_0_9_5,"summary":"..."},"note":"..."}.
-events — только значимые события всего матча (минуты 1–90): все голы и автоголы (players: [автор, ассистент, если есть]), пенальти, жёлтые и красные карточки, травмы, замены, ошибки судьи/VAR, событие fulltime на 90-й минуте. Не более 30 событий, text — одна короткая строка. Поля min/sec/team/type/players/text — как в разделе 11. Никаких pass/dribble/shot/save/possession — голы указываются сразу событием "goal" или "own_goal" БЕЗ отдельного "shot".
+events — только значимые события всего матча (минуты 1–90): все голы и автоголы (players: [автор, ассистент, если есть]), пенальти, жёлтые и красные карточки (включая редкие карточки тренеру/штабу через "person" + "role": "head"|"staff", "players": [] или запасному на скамейке через "players": ["Имя со скамейки"]), травмы, замены, ошибки судьи/VAR, событие fulltime на 90-й минуте. Не более 30 событий, text — одна короткая строка. Поля min/sec/team/type/players/text — как в разделе 10. Никаких pass/dribble/shot/save/possession — голы указываются сразу событием "goal" или "own_goal" БЕЗ отдельного "shot".
 ОБЯЗАТЕЛЬНО: строго соблюдай заданный во входных данных целевой счёт и количество голов каждой команды (НИ В КОЕМ СЛУЧАЕ не своди матчи к 1:1, если целевой счёт иной!). Передай характер и нерв именно этого матча по турнирной мотивации (битва за 1-е место/вылет, дерби, товарищеский матч), а не усреднённый шаблон.
 stats — {"home":{"shots":int,"shots_on_target":int,"xg":число,"corners":int,"fouls":int,"offsides":int,"tackles":int,"possession":int},"away":{...}}. Цифры согласованы с событиями: удары в створ не меньше голов, удары не меньше ударов в створ, фолов не меньше карточек, владение двух команд в сумме 100.
 energy_spent — {"Имя Фамилия":{"spent":целое_0_60,"reason":"кратко за какую работу"}} для каждого участника матча по реальной работе на поле (ВР: 3–11%, спокойный ЦЗ: 10–18%, обычный полевой: 18–28%, высокий прессинг/рывки: 30–46%, выход в конце: 3–14%).
@@ -15258,8 +15503,9 @@ function applyMatchEnergyToStats(st, m, f) {
   }
 }
 function computeStats(events, ctx, opts: any = null) {
-  const mk = () => ({ g: 0, sh: 0, sot: 0, xg: 0, fo: 0, co: 0, yc: 0, rc: 0, tk: 0, sv: 0, off: 0, penF: 0, penA: 0, refF: 0, refA: 0, sub: 0 });
+  const mk = () => ({ g: 0, sh: 0, sot: 0, xg: 0, fo: 0, co: 0, yc: 0, rc: 0, staffYc: 0, staffRc: 0, tk: 0, sv: 0, off: 0, penF: 0, penA: 0, refF: 0, refA: 0, sub: 0 });
   const t = { home: mk(), away: mk() }, P = {}, posT = { home: 0, away: 0 };
+  const staffCards: Array<{ side: string; teamId: string; person: string; role: string; type: string; min: number }> = [];
   const pl = (pid) => {
     if (!pid) return {};
     return P[pid] ||= { id: pid, n: ctx.names[pid], t: ctx.pidTeam[pid], side: ctx.pidSide[pid], min: 0, g: 0, a: 0, yc: 0, rc: 0, tk: 0, sv: 0, sh: 0, xg: 0, ff: 0, fa: 0, cs: 0 };
@@ -15367,15 +15613,30 @@ function computeStats(events, ctx, opts: any = null) {
       case "yellow":
         if (ok) {
           T.yc++;
-          if (p0) pl(p0).yc++;
+          if (p0) {
+            const px = pl(p0);
+            px.yc++;
+            if (e.benchCard || (start[p0] === void 0 && !subbedInPids.has(p0))) px.benchCard = true;
+          } else if (e.person) {
+            T.staffYc++;
+            staffCards.push({ side: s, teamId: ctx?.sides?.[s]?.id || "", person: e.person, role: e.role || "staff", type: "yellow", min: Number(e.min) || 0 });
+          }
         }
         break;
       case "red":
         if (ok) {
           T.rc++;
           if (p0) {
-            pl(p0).rc++;
-            end[p0] = e.min;
+            const px = pl(p0);
+            px.rc++;
+            if (e.benchCard || (start[p0] === void 0 && !subbedInPids.has(p0))) {
+              px.benchCard = true;
+            } else {
+              end[p0] = e.min;
+            }
+          } else if (e.person) {
+            T.staffRc++;
+            staffCards.push({ side: s, teamId: ctx?.sides?.[s]?.id || "", person: e.person, role: e.role || "staff", type: "red", min: Number(e.min) || 0 });
           }
         }
         break;
@@ -15404,6 +15665,7 @@ function computeStats(events, ctx, opts: any = null) {
           if (p0) {
             start[p0] = e.min;
             subbedInPids.add(p0);
+            if (P[p0]) delete P[p0].benchCard;
           }
         }
         break;
@@ -15428,7 +15690,7 @@ function computeStats(events, ctx, opts: any = null) {
   const tot = posT.home + posT.away;
   const poss = tot > 0 ? [Math.round(posT.home / tot * 100)] : [50];
   poss.push(100 - poss[0]);
-  return { teams: t, players: P, poss };
+  return { teams: t, players: P, poss, staffCards };
 }
 function buildLiveStatsPayload(m: any, f: any) {
   if (!m || !f || !m.ctx) return {};
@@ -16786,7 +17048,10 @@ function tgEvent(f, e) {
   } else {
     title = `${icon} <b>${hName} ${score} ${aName}</b> \xB7 <b>${minute}</b>`;
   }
-  tgComp(f?.comp || "rpl", text ? `${title}\n${text}` : title, { ruleKey: "liveMatchEvents", kind: "liveMatchEvents" });
+  const personTag = e.person ? `\n👔 <b>${esc(e.person)}</b> (${e.role === "head" ? "главный тренер" : "тренерский штаб"})` : "";
+  const benchTag = e.benchCard ? `\n💺 <i>Со скамейки запасных</i>` : "";
+  const body = `${personTag}${benchTag}${text ? `\n${text}` : ""}`;
+  tgComp(f?.comp || "rpl", body ? `${title}${body}` : title, { ruleKey: "liveMatchEvents", kind: "liveMatchEvents" });
 }
 function buildMatchInterviewTgMessages(f: any, m: any, stage: "preMatch" | "halftime" | "postMatch"): string[] {
   if (!f || !m) return [];
@@ -20328,6 +20593,9 @@ app.get("/api/match/:id", async (req, res) => {
       home: { coach: coachHome, staff: getStaffForTeam(f.home) },
       away: { coach: coachAway, staff: getStaffForTeam(f.away) }
     },
+    staffBans: (f.comp === FRIENDLY_COMP || f.comp === "national" || f.comp === "national_u21" || f.intraSquad)
+      ? { home: [], away: [] }
+      : { home: bannedStaffText(f.home, f.comp), away: bannedStaffText(f.away, f.comp) },
     h2h: getHeadToHead(f.home, f.away, f.id),
     commentators: serializeCommentatorsList()
   };
@@ -22348,42 +22616,48 @@ app.get("/api/player/:id/stats", (req, res) => {
     const faVal = Number(ps.fa || 0);
     const ycVal = Number(ps.yc || 0);
     const rcVal = Number(ps.rc || 0);
-    const isSubIn = !isStarter && (minVal > 0 || subInEvents.has(pid) || gVal > 0 || aVal > 0 || svVal > 0 || tkVal > 0 || shVal > 0 || ycVal > 0 || rcVal > 0);
-    if (!isStarter && !isSubIn) continue;
+    const isSubIn = !isStarter && (minVal > 0 || subInEvents.has(pid) || gVal > 0 || aVal > 0 || svVal > 0 || tkVal > 0 || shVal > 0);
+    const hasPlayed = isStarter || isSubIn;
+    const hasBenchCardOnly = !hasPlayed && (ycVal > 0 || rcVal > 0);
+    if (!hasPlayed && !hasBenchCardOnly) continue;
 
     const hg = typeof f.hg === "number" ? f.hg : (typeof f.homeScore === "number" ? f.homeScore : Number(f.st?.teams?.home?.g || 0));
     const ag = typeof f.ag === "number" ? f.ag : (typeof f.awayScore === "number" ? f.awayScore : Number(f.st?.teams?.away?.g || 0));
     const oppGoals = side === "away" ? hg : ag;
-    const csVal = isGkPos ? (Number(ps.cs || 0) > 0 || (oppGoals === 0 && minVal >= 45) ? 1 : 0) : (oppGoals === 0 && minVal >= 45 ? 1 : 0);
+    const csVal = hasPlayed ? (isGkPos ? (Number(ps.cs || 0) > 0 || (oppGoals === 0 && minVal >= 45) ? 1 : 0) : (oppGoals === 0 && minVal >= 45 ? 1 : 0)) : 0;
 
     let matchRating: number | null = null;
-    const ratingsArr = Array.isArray(mObj?.ratings) && mObj.ratings.length
-      ? mObj.ratings
-      : (mObj ? computeMatchRatings(mObj, f, tn(f.home), tn(f.away)) : []);
-    for (const r of ratingsArr) {
-      const rPid = r?.playerId || r?.id;
-      if (rPid === pid && Number.isFinite(Number(r.rating))) {
-        matchRating = +Number(r.rating).toFixed(2);
-        break;
+    if (hasPlayed) {
+      const ratingsArr = Array.isArray(mObj?.ratings) && mObj.ratings.length
+        ? mObj.ratings
+        : (mObj ? computeMatchRatings(mObj, f, tn(f.home), tn(f.away)) : []);
+      for (const r of ratingsArr) {
+        const rPid = r?.playerId || r?.id;
+        if (rPid === pid && Number.isFinite(Number(r.rating))) {
+          matchRating = +Number(r.rating).toFixed(2);
+          break;
+        }
       }
     }
 
     const applyToBucket = (b: any) => {
-      b.games += 1;
-      if (isStarter) b.starts += 1;
-      else b.subIns += 1;
-      b.minutes += minVal;
-      b.goals += gVal;
-      b.assists += aVal;
-      b.ga += gVal + aVal;
-      b.shots += shVal;
-      b.xg = +(b.xg + xgVal).toFixed(2);
-      b.tackles += tkVal;
-      b.saves += svVal;
-      b.cleanSheets += csVal;
-      b.conceded += oppGoals;
-      b.foulsCommitted += ffVal;
-      b.foulsDrawn += faVal;
+      if (hasPlayed) {
+        b.games += 1;
+        if (isStarter) b.starts += 1;
+        else b.subIns += 1;
+        b.minutes += minVal;
+        b.goals += gVal;
+        b.assists += aVal;
+        b.ga += gVal + aVal;
+        b.shots += shVal;
+        b.xg = +(b.xg + xgVal).toFixed(2);
+        b.tackles += tkVal;
+        b.saves += svVal;
+        b.cleanSheets += csVal;
+        b.conceded += oppGoals;
+        b.foulsCommitted += ffVal;
+        b.foulsDrawn += faVal;
+      }
       b.yc += ycVal;
       b.rc += rcVal;
       if (matchRating !== null) {
@@ -22406,7 +22680,7 @@ app.get("/api/player/:id/stats", (req, res) => {
       }
       applyToBucket(byCompMap.get(compId));
 
-      if (recentMatches.length < 35) {
+      if (hasPlayed && recentMatches.length < 35) {
         recentMatches.push({
           fid: f.id,
           date: f.date || "",
@@ -23255,15 +23529,18 @@ function enrichClubWatchlist(teamId: string) {
         const pObj = player(pid);
         const isGkPos = (pObj?.pos || ps.pos) === "ВР";
         const minVal = Number(ps.min || 0);
-        const played = minVal > 0 || ps.started === true || Number(ps.g || 0) > 0 || Number(ps.a || 0) > 0 || Number(ps.sv || 0) > 0 || Number(ps.tk || 0) > 0 || Number(ps.sh || 0) > 0 || Number(ps.yc || 0) > 0 || Number(ps.rc || 0) > 0;
-        if (!played) continue;
+        const played = minVal > 0 || ps.started === true || Number(ps.g || 0) > 0 || Number(ps.a || 0) > 0 || Number(ps.sv || 0) > 0 || Number(ps.tk || 0) > 0 || Number(ps.sh || 0) > 0;
+        const hasBenchCard = !played && (Number(ps.yc || 0) > 0 || Number(ps.rc || 0) > 0);
+        if (!played && !hasBenchCard) continue;
         const side = (ps.side === "home" || ps.side === "away") ? ps.side : (f.home !== f.away ? (ps.t === f.away ? "away" : (ps.t === f.home ? "home" : null)) : null);
         const hg = typeof f.hg === "number" ? f.hg : (typeof f.homeScore === "number" ? f.homeScore : Number(f.st?.teams?.home?.g || 0));
         const ag = typeof f.ag === "number" ? f.ag : (typeof f.awayScore === "number" ? f.awayScore : Number(f.st?.teams?.away?.g || 0));
         const oppGoals = side === "away" ? hg : (side === "home" ? ag : 0);
-        const csVal = isGkPos
-          ? (Number(ps.cs || 0) > 0 || (side !== null && oppGoals === 0 && minVal >= 45) ? 1 : 0)
-          : (side !== null && oppGoals === 0 && minVal >= 45 ? 1 : 0);
+        const csVal = played
+          ? (isGkPos
+            ? (Number(ps.cs || 0) > 0 || (side !== null && oppGoals === 0 && minVal >= 45) ? 1 : 0)
+            : (side !== null && oppGoals === 0 && minVal >= 45 ? 1 : 0))
+          : 0;
 
         if (!seasonStatsByPid[pid]) {
           seasonStatsByPid[pid] = {
@@ -23285,24 +23562,26 @@ function enrichClubWatchlist(teamId: string) {
           };
         }
         const st = seasonStatsByPid[pid];
-        st.games += 1;
-        if (ps.started === true) st.starts += 1;
-        st.minutes += minVal;
-        st.goals += Number(ps.g || 0);
-        st.assists += Number(ps.a || 0);
-        st.shots += Number(ps.sh || 0);
-        st.xg = +(st.xg + Number(ps.xg || 0)).toFixed(2);
-        st.tackles += Number(ps.tk || 0);
-        if (isGkPos) st.saves += Number(ps.sv || 0);
-        st.cleanSheets += csVal;
-        st.conceded += oppGoals;
+        if (played) {
+          st.games += 1;
+          if (ps.started === true) st.starts += 1;
+          st.minutes += minVal;
+          st.goals += Number(ps.g || 0);
+          st.assists += Number(ps.a || 0);
+          st.shots += Number(ps.sh || 0);
+          st.xg = +(st.xg + Number(ps.xg || 0)).toFixed(2);
+          st.tackles += Number(ps.tk || 0);
+          if (isGkPos) st.saves += Number(ps.sv || 0);
+          st.cleanSheets += csVal;
+          st.conceded += oppGoals;
+          const rMap = getFixtureRatings();
+          if (rMap.has(pid)) {
+            st.ratingSum += rMap.get(pid) || 0;
+            st.ratingCount += 1;
+          }
+        }
         st.yc += Number(ps.yc || 0);
         st.rc += Number(ps.rc || 0);
-        const rMap = getFixtureRatings();
-        if (rMap.has(pid)) {
-          st.ratingSum += rMap.get(pid) || 0;
-          st.ratingCount += 1;
-        }
       }
     }
   }
@@ -28767,7 +29046,36 @@ function staffSlots(tid) {
       custom: !!meta.custom,
       requiresApproval: role === "head",
       pendingChange: pendingChange ? coachRequestView(pendingChange) : null,
-      member: m ? { id: m.id, name: m.name, age: m.age, nationality: m.nationality, brief: m.brief || "", pending: !!m.pending } : null
+      member: m ? {
+        id: m.id,
+        name: m.name,
+        age: m.age,
+        nationality: m.nationality,
+        brief: m.brief || "",
+        pending: !!m.pending,
+        discipline: (() => {
+          const dd = (db.staffDiscipline || {})[discKey(tid, m.name)];
+          if (!dd) return null;
+          const byComp: Record<string, { yc: number; banLeft: number; reason: string; title: string }> = {};
+          let totalYc = Number(dd.yc || 0);
+          let activeBanLeft = Number(dd.banLeft || 0);
+          let activeReason = String(dd.reason || "");
+          for (const [ck, cb] of Object.entries(dd.byComp || {}) as any[]) {
+            const cyc = Number(cb?.yc || 0);
+            const cban = Number(cb?.banLeft || 0);
+            totalYc += cyc;
+            if (cban > 0 && cban >= activeBanLeft) {
+              activeBanLeft = cban;
+              activeReason = String(cb?.reason || activeReason || "");
+            }
+            if (cyc > 0 || cban > 0) {
+              byComp[ck] = { yc: cyc, banLeft: cban, reason: String(cb?.reason || ""), title: discCompTitle(ck) };
+            }
+          }
+          if (!totalYc && !activeBanLeft && !Object.keys(byComp).length) return null;
+          return { yc: totalYc, banLeft: activeBanLeft, reason: activeReason, byComp };
+        })()
+      } : null
     };
   });
 }
